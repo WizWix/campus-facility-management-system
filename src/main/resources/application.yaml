@@ -1,0 +1,35 @@
+logging:
+  level:
+    root: INFO
+    org.springframework.security: DEBUG
+    io.github.wizwix: DEBUG
+  pattern.console: "%clr(%d{yy-MM-dd HH:mm:ss}){faint} %clr(%5p) %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n"
+spring:
+  application:
+    name: campus-facility-management-system
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: 'jdbc:mysql://localhost:3306/kbpedia?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul'
+    username: root
+    password: mysql
+    hikari:
+      initialization-fail-timeout: -1
+      connection-timeout: 3000
+  devtools:
+    livereload:
+      enabled: true
+      port: 35729 # Default value. Leave this for later reference.
+    restart:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  #  main:
+  #    allow-bean-definition-overriding: true
+  sql:
+    init:
+      encoding: utf-8
+jwt:
+  secret: "${JWT_SECRET:your_default_very_long_random_string_here_for_dev_only}"
+  expiration: 3600000 # 1 hour
