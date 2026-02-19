@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Profile;
 public class DevDataInitializer {
   @Bean
   @Profile("dev")
-  public CommandLineRunner initDevData() {
+  public CommandLineRunner createDevData() {
     return args -> {
     };
   }
