@@ -17,12 +17,12 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Building {
-  /// 순수 인덱싱용
+  /// 건물 ID: 순수 인덱싱용
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private long id;
+  private Long id;
   /// 건물 이름 (e.g. '강의동 1')
   private String name;
   /// 건물의 대여 가능한 방 존재 여부
-  private boolean rentable;
+  private Boolean rentable;
 }

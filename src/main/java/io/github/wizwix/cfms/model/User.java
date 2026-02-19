@@ -1,5 +1,6 @@
 package io.github.wizwix.cfms.model;
 
+import io.github.wizwix.cfms.model.enums.UserRole;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -22,16 +23,24 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
+  /// 회원 ID: 순수 인덱싱용
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id; // 순수 인덱싱용
-  private LocalDateTime createdAt;
+  private Long id;
+  /// 회원 이름
+  private String name;
+  /// 비밀번호
+  private String password; // BCrypt로 암호화된 비밀번호
+  /// 이메일
   @Column(unique = true)
   private String email;
-  private boolean enabled = true; // 탈퇴 시 Soft Delete 사용
-  private String name;
-  private String number; // 학번 or 교번 (e.g. '260004181')
-  private String password; // BCrypt로 암호화된 비밀번호
+  /// 회원 생성 시각
+  private LocalDateTime createdAt;
+  /// 회원의 탈퇴 여부: Table에서 해당 줄을 지우는 대신, 해당 Field를 `false`로 설정해 Soft Delete 구현
+  private Boolean enabled = true;
+  /// 학번 or 교번 (e.g. '260004181')
+  private String number;
+  /// 회원의 유형 (학생, 교수, 관리자)
   @Enumerated(EnumType.STRING)
   private UserRole role;
 }

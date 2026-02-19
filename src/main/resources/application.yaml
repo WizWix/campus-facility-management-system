@@ -9,7 +9,7 @@ spring:
     name: campus-facility-management-system
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: 'jdbc:mysql://localhost:3306/kbpedia?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul'
+    url: 'jdbc:mysql://localhost:3306/campus?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul'
     username: root
     password: mysql
     hikari:

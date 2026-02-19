@@ -1,5 +1,6 @@
 package io.github.wizwix.cfms.model;
 
+import io.github.wizwix.cfms.model.enums.ReservationStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -26,24 +27,30 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Reservation {
-  // @Column은 생략 가능
+  /// 시설 예약 ID
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+  /// 동아리 예약일 경우, 해당 동아리
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "club_id")
-  private Club club; // 동아리 예약일 경우
+  private Club club;
+  /// 시설 예약 신청 시각
   private LocalDateTime createdAt;
+  /// 시설 이용 종료 시각
   private LocalDateTime endTime;
+  /// 시설 예약 목적
   @Column(length = 1000)
   private String purpose;
+  /// 예약할 호실
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "room_id", nullable = false)
   private Room room;
+  /// 시설 이용 시작 시각
   private LocalDateTime startTime;
+  /// 시설 예약 현황 (신청 허가됨, 신청 취소됨, 승인 대기 중, 승인 반려됨)
   @Enumerated(EnumType.STRING)
-  private EntryStatus status; // PENDING, APPROVED, REJECTED, CANCELLED
+  private ReservationStatus status;
+  /// 시설 예약 갱신 시각
   private LocalDateTime updatedAt;
-  @Version
-  private Long version; // optimistic locking 보조
 }

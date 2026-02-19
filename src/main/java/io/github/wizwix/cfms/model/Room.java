@@ -27,14 +27,16 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 class Room {
-  // @Column은 생략 가능
+  /// 호실 ID: 순수 인덱싱용
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
-
+  /// 호실이 속한 건물
   @ManyToOne(fetch = FetchType.LAZY)
   private Building building;
+  /// 호실의 정식 명칭 (e.g. 'IT대학동 104호')
   @Column(unique = true, nullable = false)
-  private String roomCode; // 'IT동 104호'
-  private String roomNumber; // '104'
+  private String roomCode;
+  /// 호실의 방 번호 (e.g. '104')
+  private String roomNumber;
 }

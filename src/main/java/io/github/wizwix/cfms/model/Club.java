@@ -1,5 +1,6 @@
 package io.github.wizwix.cfms.model;
 
+import io.github.wizwix.cfms.model.enums.ClubStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -27,22 +28,22 @@ public class Club {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
-  /// 자동 가입 허가 여부
-  private boolean autoApprove;
+  /// 동아리 이름
+  private String name;
+  /// 부원 자동 가입 허가 여부
+  private Boolean autoApprove;
   /// 동아리 생성일자
   private LocalDateTime createdAt;
   /// 동아리 설명
   @Column(length = 5000)
   private String description;
-  /// 동아리 이름
-  private String name;
   /// 동아리 회장
   @ManyToOne
   private User president;
   /// 동아리 URL 식별자
   @Column(unique = true, length = 10)
   private String slug;
-  /// 동아리 상태 (승인됨, 승인 대기 중, 승인 거부 됨)
+  /// 동아리 상태 (개설 승인됨, 개설 승인 대기 중, 개설 승인 거부 됨)
   @Enumerated(EnumType.STRING)
-  private EntryStatus status;
+  private ClubStatus status;
 }
