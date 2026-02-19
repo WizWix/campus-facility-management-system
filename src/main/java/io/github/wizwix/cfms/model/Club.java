@@ -23,18 +23,26 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Club {
+  /// 동아리 ID
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+  /// 자동 가입 허가 여부
   private boolean autoApprove;
+  /// 동아리 생성일자
   private LocalDateTime createdAt;
+  /// 동아리 설명
   @Column(length = 5000)
   private String description;
+  /// 동아리 이름
   private String name;
+  /// 동아리 회장
   @ManyToOne
-  private User president; // 동아리장
+  private User president;
+  /// 동아리 URL 식별자
   @Column(unique = true, length = 10)
   private String slug;
+  /// 동아리 상태 (승인됨, 승인 대기 중, 승인 거부 됨)
   @Enumerated(EnumType.STRING)
   private EntryStatus status;
 }
