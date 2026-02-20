@@ -43,7 +43,7 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             // allow public API
-            .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers("/api/auth/**", "/api/buildings/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/articles/**", "/api/categories/**").permitAll()
             // protect admin paths
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
