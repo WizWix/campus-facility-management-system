@@ -3,7 +3,7 @@ plugins {
   id 'java'
   id 'org.springframework.boot' version '3.5.10'
   id 'io.spring.dependency-management' version '1.1.7'
-  id 'io.github.m-segreti.bun' version '0.0.15'
+  id 'io.github.tetratheta.bun' version '0.0.22'
 }
 
 group = 'io.github.wizwix'
@@ -19,6 +19,7 @@ java {
 
 repositories {
   mavenCentral()
+  maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -71,56 +72,10 @@ springBoot { buildInfo() }
 test { useJUnitPlatform() }
 
 // bun
-def bunExeProvider = provider {
-  def ext = extensions.getByType(io.github.m_segreti.BunExtension)
-  def sys = ext.system.getOrElse(io.github.m_segreti.BunSystem.detect())
-  def ver = ext.version.getOrElse('latest')
+bun.forceBun = true
+bunInstall.workingDir(frontendDir)
+bunBuild.workingDir(frontendDir)
 
-  def normalizedVer = (ver == 'latest') ? 'latest' : ver
-  def zipBase = sys.zipName().endsWith('.zip') ? sys.zipName().substring(0, sys.zipName().length() - 4) : sys.zipName()
-  return layout.projectDirectory.dir(".gradle/bun/${normalizedVer}/${zipBase}").file(sys.exeName()).asFile
-}
-
-bunInstall.enabled = false
-
-tasks.register('bunSafeInstall', Exec) {
-  doFirst {
-    def exe = bunExeProvider.get()
-    if (!exe.exists()) throw new GradleException("Bun executable missing at ${exe.absolutePath}. Ensure bunSetup ran.")
-    executable = exe.absolutePath
-  }
-
-  group = 'bun'
-  dependsOn('bunSetup')
-
-  workingDir = frontendDir
-
-  inputs.file(frontendDir.file('package.json'))
-
-  outputs.file(frontendDir.file('bun.lock'))
-  outputs.dir(frontendDir.dir('node_modules'))
-
-  args('install',)
-}
-
-tasks.register('bunBuild', Exec) {
-  doFirst {
-    def exe = bunExeProvider.get()
-    if (!exe.exists()) throw new GradleException("Bun executable missing at ${exe.absolutePath}. Ensure bunSetup ran.")
-    executable = exe.absolutePath
-  }
-
-  group = 'bun'
-  dependsOn('bunSafeInstall')
-
-  workingDir = frontendDir
-
-  inputs.dir(frontendDir.dir('public'))
-  inputs.dir(frontendDir.dir('src'))
-  inputs.file(frontendDir.file('package.json'))
-  inputs.file(frontendDir.file('bun.lock'))
-
-  outputs.dir(frontendBuildDir)
-
-  args('--bun', 'run', 'build')
+configurations.configureEach {
+  resolutionStrategy.cacheChangingModulesFor(0, 'seconds')
 }

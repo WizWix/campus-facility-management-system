@@ -1,1 +1,15 @@
+pluginManagement {
+  repositories {
+    gradlePluginPortal()
+    maven { url 'https://jitpack.io' }
+  }
+  resolutionStrategy {
+    eachPlugin {
+      if (requested.id.id == 'io.github.tetratheta.bun') {
+        useModule("com.github.TetraTheta.bun-gradle-plugin:io.github.tetratheta.bun.gradle.plugin:${requested.version}")
+      }
+    }
+  }
+}
+
 rootProject.name = 'campus-facility-management-system'
