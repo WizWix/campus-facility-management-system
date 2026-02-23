@@ -1,5 +1,6 @@
 package io.github.wizwix.cfms.model;
 
+import io.github.wizwix.cfms.model.enums.BuildingType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,4 +26,6 @@ public class Building {
   private String name;
   /// 건물의 대여 가능한 방 존재 여부
   private Boolean rentable;
+  /// 건물 유형
+  private BuildingType type;
 }
