@@ -26,7 +26,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-class Room {
+public class Room {
   /// 호실 ID: 순수 인덱싱용
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

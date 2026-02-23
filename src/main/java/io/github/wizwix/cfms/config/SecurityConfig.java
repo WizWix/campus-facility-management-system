@@ -43,11 +43,15 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             // allow public API
-            .requestMatchers("/api/auth/**", "/api/buildings/**").permitAll()
-            .requestMatchers(HttpMethod.GET, "/api/articles/**", "/api/categories/**").permitAll()
+            .requestMatchers("/api/auth/login", "/api/auth/logout", "/api/auth/register", "/api/auth/password-reset/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/buildings/**", "/api/rooms/**", "/api/cafeteria/**", "/api/dorms/**", "/api/clubs/**").permitAll()
             // protect admin paths
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
             // any other API call must be authenticated
+            .requestMatchers("/api/users/**", "/api/reservations/**").authenticated()
+            .requestMatchers(HttpMethod.POST, "/api/clubs/**").authenticated()
+            .requestMatchers(HttpMethod.PATCH, "/api/clubs/**").authenticated()
+            .requestMatchers(HttpMethod.DELETE, "/api/clubs/**").authenticated()
             .requestMatchers("/api/**").authenticated()
             // everything else (React frontend, static files etc.) are permitted
             .anyRequest().permitAll()

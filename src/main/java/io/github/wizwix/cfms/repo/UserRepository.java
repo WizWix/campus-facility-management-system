@@ -1,0 +1,11 @@
+package io.github.wizwix.cfms.repo;
+
+import io.github.wizwix.cfms.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+  Optional<User> findByNumberAndEnabledTrue(String userNumber);
+  Optional<User> findByNumber(String userNumber);
+}
