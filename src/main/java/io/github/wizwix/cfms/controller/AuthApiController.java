@@ -24,6 +24,7 @@ public class AuthApiController {
   private final JwtUtils jwtUtils;
   private final UserService userService;
 
+  /// 로그인
   @PostMapping("/login")
   public ResponseEntity<ResponseLogin> login(@Valid @RequestBody RequestLogin req, HttpServletResponse response) {
     ResponseLogin result = userService.login(req);
@@ -38,6 +39,7 @@ public class AuthApiController {
     return ResponseEntity.ok(result);
   }
 
+  /// 로그아웃
   @PostMapping("/logout")
   public ResponseEntity<Void> logout(HttpServletResponse resp) {
     Cookie cookie = new Cookie("jwt_token", null);
@@ -51,15 +53,19 @@ public class AuthApiController {
     // `/`로 리다이렉션하는 것은 프론트엔드의 몫
   }
 
+  /// 비밀번호 재설정 (3단계)
   @PatchMapping("/password-reset")
   public void passwordReset() {}
 
+  /// 비밀번호 재설정 (1단계)
   @PostMapping("/password-reset/request")
   public void passwordResetRequest() {}
 
+  /// 비밀번호 재설정 (2단계)
   @PostMapping("/password-reset/verify")
   public void passwordResetVerify() {}
 
+  /// 회원가입
   @PostMapping("/register")
   public ResponseEntity<?> register(@Valid @RequestBody RequestRegister req) {
     userService.register(req);
