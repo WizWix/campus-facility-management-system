@@ -47,8 +47,9 @@ export const BUILDING_POLYGONS = [{
 }, {
   key: 'dormitory',
   name: '기숙사',
-  info: '학생 생활관 · 1~8층',
-  rentable: false,
+  info: '학생 생활관 · 1~5층',
+  rentable: true,
+  customRoute: '/dormitory',
   points: '25,147 26,161 52,277 145,253 143,221 124,170 80,185 69,168 53,163 50,143',
 }, {
   key: 'gym',

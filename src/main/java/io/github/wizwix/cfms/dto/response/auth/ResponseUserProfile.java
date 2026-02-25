@@ -1,5 +1,6 @@
 package io.github.wizwix.cfms.dto.response.auth;
 
+import io.github.wizwix.cfms.model.enums.Gender;
 import io.github.wizwix.cfms.model.enums.UserRole;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 /// @param userNumber [String] 학번 or 교번
 /// @param email      [String] 이메일
 /// @param role       [UserRole] 사용자 유형
+/// @param gender     [Gender] 성별
 /// @param createdAt  [LocalDateTime] 가입 일시
 public record ResponseUserProfile(Long id, String name, String userNumber, String email, UserRole role,
-                                  LocalDateTime createdAt) {}
+                                  Gender gender, LocalDateTime createdAt) {}

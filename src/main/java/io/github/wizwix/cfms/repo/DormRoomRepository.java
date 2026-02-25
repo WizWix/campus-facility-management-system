@@ -1,0 +1,15 @@
+package io.github.wizwix.cfms.repo;
+
+import io.github.wizwix.cfms.model.DormRoom;
+import io.github.wizwix.cfms.model.enums.Gender;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface DormRoomRepository extends JpaRepository<DormRoom, Long> {
+  List<DormRoom> findByGender(Gender gender);
+
+  List<DormRoom> findByGenderAndFloor(Gender gender, int floor);
+
+  boolean existsByRoomNumber(String roomNumber);
+}
