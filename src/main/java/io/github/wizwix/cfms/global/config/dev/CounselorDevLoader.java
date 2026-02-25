@@ -22,18 +22,21 @@ public class CounselorDevLoader extends BaseDevLoader<Counselor> {
 
   @Override
   public void load() {
-    if (repo.count() > 0) return;
     processItems(counselor -> {
       if (!repo.existsByName(counselor.getName())) {
         repo.save(counselor);
+        log.info("Loaded dev counselor: ({} / {} / {})", counselor.getName(), counselor.getDepartment(), counselor.getPosition());
       }
     });
-    log.info("Loaded dev counselors: {} counselors", repo.count());
   }
 
   @Override
   public void unload() {
-    repo.deleteAll();
-    log.info("Unloaded dev counselors");
+    processItems(counselor -> repo.findByName(counselor.getName()).ifPresent(existing -> {
+      if (counselor.getDepartment() == existing.getDepartment() && counselor.getPosition().equals(existing.getPosition())) {
+        repo.delete(existing);
+        log.info("Unloaded dev counselor: ({} / {} / {})", existing.getName(), existing.getDepartment(), existing.getPosition());
+      }
+    }));
   }
 }
