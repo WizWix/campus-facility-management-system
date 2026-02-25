@@ -10,4 +10,6 @@ public interface CafeteriaMealItemRepository extends JpaRepository<CafeteriaMeal
   void deleteByMeal(CafeteriaMeal meal);
 
   List<CafeteriaMealItem> findByMealIn(List<CafeteriaMeal> meals);
+
+  void deleteByMeal(CafeteriaMeal meal);
 }

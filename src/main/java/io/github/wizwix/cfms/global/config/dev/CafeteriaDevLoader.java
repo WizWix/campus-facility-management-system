@@ -45,8 +45,10 @@ public class CafeteriaDevLoader implements DevDataLoader {
 
   @Override
   public void load() {
+    if (storeRepo.count() > 0) return;
     loadStores();
     loadMeals();
+    log.info("Loaded dev cafeteria data: {} stores, {} meals", storeRepo.count(), mealRepo.count());
   }
 
   @Override

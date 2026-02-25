@@ -10,4 +10,6 @@ public interface CafeteriaStoreMenuRepository extends JpaRepository<CafeteriaSto
   void deleteByStore(CafeteriaStore store);
 
   List<CafeteriaStoreMenu> findByStoreIn(List<CafeteriaStore> stores);
+
+  void deleteByStore(CafeteriaStore store);
 }
