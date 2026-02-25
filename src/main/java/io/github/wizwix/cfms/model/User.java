@@ -55,4 +55,7 @@ public class User {
   /// 회원의 유형 (학생, 교수, 관리자)
   @Enumerated(EnumType.STRING)
   private UserRole role;
+  /// 성별
+  @Enumerated(EnumType.STRING)
+  private Gender gender;
 }

@@ -157,6 +157,7 @@ function MealSection({meals}) {
           </div>
         </div>
       </div>
+    </div>
   );
 }
 
@@ -244,5 +245,6 @@ function FoodCourtSection({stores, selectedStore, onSelectStore, store}) {
           )}
         </div>
       </div>
+    </div>
   );
 }

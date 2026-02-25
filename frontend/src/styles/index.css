@@ -60,6 +60,7 @@ body { background: #F5F7FA; font-family: 'Noto Sans KR', sans-serif; min-height:
 .breadcrumb-nav a:hover { color: #2C5282; }
 
 .breadcrumb-nav .sep { margin: 0 8px; }
+.breadcrumb-nav .current { color: #2d3748; font-weight: 500; }
 
 .breadcrumb-nav .current { color: #2D3748; font-weight: 500; }
 
@@ -80,6 +81,9 @@ body { background: #F5F7FA; font-family: 'Noto Sans KR', sans-serif; min-height:
 .semester-box { text-align: center; }
 
 .semester-icon { font-size: 2.5rem; margin-bottom: .5rem; }
+.semester-label { font-size: .8rem; color: #a0aec0; margin-bottom: 2px; }
+.semester-value { font-size: 1.15rem; font-weight: 700; color: #2d3748; }
+.semester-sub { font-size: .82rem; color: #718096; margin-top: 4px; }
 
 .semester-label { color: #A0AEC0; font-size: .8rem; margin-bottom: 2px; }
 
