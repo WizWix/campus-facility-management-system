@@ -23,7 +23,9 @@ public abstract class BaseDevLoader<T> implements DevDataLoader {
     this.loader = loader;
     this.entityClass = entityClass;
     this.jsonPath = jsonPath;
-    this.mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    this.mapper = new ObjectMapper()
+        .registerModule(new JavaTimeModule())
+        .configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_COMMENTS, true);
   }
 
   protected void processItems(Consumer<T> action) {
