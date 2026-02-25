@@ -70,6 +70,11 @@ export function MyPage() {
           {tab === 'counseling' && <CounselingTab/>}
         </div>
       </div>
+      <div className="mypage-content">
+        {tab === 'profile' && <ProfileTab/>}
+        {tab === 'dorm' && <DormTab/>}
+      </div>
+    </div>
   );
 }
 
@@ -172,6 +177,7 @@ function ProfileTab() {
           </form>
         </div>
       </div>
+    </div>
   );
 }
 
