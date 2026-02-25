@@ -25,9 +25,9 @@ public class DormRoom {
   private Long id;
   /// 층 (1~5)
   private Integer floor;
-  /// 호실 번호 (e.g. "M101", "F203")
-  private String roomNumber;
   /// 남자/여자 기숙사
   @Enumerated(EnumType.STRING)
   private Gender gender;
+  /// 호실 번호 (e.g. "M101", "F203")
+  private String roomNumber;
 }

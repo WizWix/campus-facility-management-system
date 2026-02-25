@@ -1,6 +1,6 @@
 package io.github.wizwix.cfms.model;
 
-import io.github.wizwix.cfms.model.enums.MealType;
+import io.github.wizwix.cfms.model.enums.CounselingDepartment;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,26 +13,23 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
-
 @Entity
-@Table(name = "cfms_cafeteria_meal")
+@Table(name = "cfms_counselor")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CafeteriaMeal {
-  /// 끼니 ID
+public class Counselor {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
-  /// 날짜
-  private LocalDate date;
-  /// 아이콘 (e.g. '🌅')
-  private String icon;
-  /// 끼니 유형 (BREAKFAST/LUNCH/DINNER)
+  /// 상담사 이름
+  private String name;
+  /// 소속 부서
   @Enumerated(EnumType.STRING)
-  private MealType mealType;
-  /// 시간대 (e.g. '08:00 ~ 09:30')
-  private String time;
+  private CounselingDepartment department;
+  /// 직위 (e.g. "교무처 상담관")
+  private String position;
+  /// 전문분야 (e.g. "수강신청 · 학점 관리 · 전과/복수전공")
+  private String specialization;
 }

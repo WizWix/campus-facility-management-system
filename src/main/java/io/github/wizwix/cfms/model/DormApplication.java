@@ -28,26 +28,26 @@ public class DormApplication {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
-  /// 신청 호실
-  @ManyToOne
-  @JoinColumn(name = "room_id", nullable = false)
-  private DormRoom room;
   /// 신청자
   @ManyToOne
   @JoinColumn(name = "applicant_id", nullable = false)
   private User applicant;
+  /// 신청일시
+  private LocalDateTime createdAt;
   /// 같이 신청한 친구 (null이면 단독 신청)
   @ManyToOne
   @JoinColumn(name = "partner_id")
   private User partner;
-  /// 학기 (e.g. "2026-1")
-  private String semester;
   /// 입주 기간
   @Enumerated(EnumType.STRING)
   private DormPeriod period;
+  /// 신청 호실
+  @ManyToOne
+  @JoinColumn(name = "room_id", nullable = false)
+  private DormRoom room;
+  /// 학기 (e.g. "2026-1")
+  private String semester;
   /// 신청 상태
   @Enumerated(EnumType.STRING)
   private DormApplicationStatus status;
-  /// 신청일시
-  private LocalDateTime createdAt;
 }

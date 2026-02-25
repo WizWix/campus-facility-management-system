@@ -41,6 +41,9 @@ public class User {
   private LocalDateTime disabledAt;
   /// 회원의 탈퇴 여부: Table에서 해당 줄을 즉시 지우는 대신, 해당 Field를 `false`로 설정해 Soft Delete 구현
   private Boolean enabled = true;
+  /// 성별
+  @Enumerated(EnumType.STRING)
+  private Gender gender;
   /// 학번 or 교번 (e.g. '260004181')
   @Column(unique = true, nullable = false)
   private String number;

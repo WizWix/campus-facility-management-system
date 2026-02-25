@@ -23,15 +23,15 @@ public class CafeteriaMealItem {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+  /// 메뉴명
+  private String name;
+  /// 할인 사유 (nullable)
+  private String discountLabel;
+  /// 할인가 (nullable)
+  private Integer discountPrice;
   /// 소속 끼니
   @ManyToOne(fetch = FetchType.LAZY)
   private CafeteriaMeal meal;
-  /// 메뉴명
-  private String name;
   /// 정가 (원)
   private Integer price;
-  /// 할인가 (nullable)
-  private Integer discountPrice;
-  /// 할인 사유 (nullable)
-  private String discountLabel;
 }

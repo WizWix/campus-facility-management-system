@@ -28,56 +28,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Transactional
 public class DormService implements IDormService {
-  private final DormRoomRepository dormRoomRepo;
   private final DormApplicationRepository dormAppRepo;
+  private final DormRoomRepository dormRoomRepo;
   private final UserRepository userRepo;
-
-  /// 현재 학기 문자열 (간단히 연도-학기로 생성)
-  private String currentSemester() {
-    int year = LocalDateTime.now().getYear();
-    int month = LocalDateTime.now().getMonthValue();
-    return year + "-" + (month <= 7 ? "1" : "2");
-  }
-
-  @Override
-  public List<ResponseDormFloor> getDormRooms(Gender gender) {
-    List<DormRoom> rooms = dormRoomRepo.findByGender(gender);
-    String semester = currentSemester();
-
-    // 승인된 신청 기준으로 각 호실별 입주 인원 계산
-    List<DormApplicationStatus> activeStatuses = List.of(DormApplicationStatus.PENDING, DormApplicationStatus.APPROVED);
-    List<DormApplication> applications = rooms.isEmpty()
-        ? List.of()
-        : dormAppRepo.findByRoomInAndSemesterAndStatusIn(rooms, semester, activeStatuses);
-
-    // roomId → 입주 인원 수 및 입주자 이름
-    Map<Long, Integer> occupancyMap = new HashMap<>();
-    Map<Long, String> residentNameMap = new HashMap<>();
-    for (DormApplication app : applications) {
-      Long roomId = app.getRoom().getId();
-      int count = occupancyMap.getOrDefault(roomId, 0);
-      // 신청자 1명 + partner가 있으면 +1
-      int appCount = 1 + (app.getPartner() != null ? 1 : 0);
-      occupancyMap.put(roomId, count + appCount);
-      if (count == 0) {
-        residentNameMap.put(roomId, maskName(app.getApplicant().getName()));
-      }
-    }
-
-    // 층별 그룹핑
-    Map<Integer, List<ResponseDormRoom>> floorMap = new HashMap<>();
-    for (DormRoom room : rooms) {
-      int occ = Math.min(occupancyMap.getOrDefault(room.getId(), 0), 2);
-      String resident = occ == 1 ? residentNameMap.get(room.getId()) : null;
-      ResponseDormRoom dto = new ResponseDormRoom(room.getId(), room.getRoomNumber(), room.getFloor(), occ, resident);
-      floorMap.computeIfAbsent(room.getFloor(), k -> new ArrayList<>()).add(dto);
-    }
-
-    return floorMap.entrySet().stream()
-        .sorted(Map.Entry.comparingByKey())
-        .map(e -> new ResponseDormFloor(e.getKey(), e.getValue()))
-        .toList();
-  }
 
   @Override
   public ResponseDormApplyResult apply(User currentUser, RequestDormApply request) {
@@ -146,6 +99,69 @@ public class DormService implements IDormService {
     return new ResponseDormApplyResult(application.getId(), room.getRoomNumber(), message);
   }
 
+  /// 기숙사 신청 취소 — PENDING만 가능
+  /// 본인 신청인지 확인 후, status를 CANCELLED로 변경 (DB 삭제 아님)
+  @Override
+  public void cancelApplication(User user, Long applicationId) {
+    DormApplication app = dormAppRepo.findById(applicationId)
+        .orElseThrow(() -> new IllegalArgumentException("신청 내역을 찾을 수 없습니다."));
+    if (!app.getApplicant().getId().equals(user.getId())) {
+      throw new IllegalArgumentException("본인의 신청만 취소할 수 있습니다.");
+    }
+    if (app.getStatus() != DormApplicationStatus.PENDING) {
+      throw new IllegalArgumentException("대기 중인 신청만 취소할 수 있습니다.");
+    }
+    app.setStatus(DormApplicationStatus.CANCELLED);
+    dormAppRepo.save(app);
+  }
+
+  @Override
+  public List<ResponseDormFloor> getDormRooms(Gender gender) {
+    List<DormRoom> rooms = dormRoomRepo.findByGender(gender);
+    String semester = currentSemester();
+
+    // 승인된 신청 기준으로 각 호실별 입주 인원 계산
+    List<DormApplicationStatus> activeStatuses = List.of(DormApplicationStatus.PENDING, DormApplicationStatus.APPROVED);
+    List<DormApplication> applications = rooms.isEmpty()
+        ? List.of()
+        : dormAppRepo.findByRoomInAndSemesterAndStatusIn(rooms, semester, activeStatuses);
+
+    // roomId → 입주 인원 수 및 입주자 이름
+    Map<Long, Integer> occupancyMap = new HashMap<>();
+    Map<Long, String> residentNameMap = new HashMap<>();
+    for (DormApplication app : applications) {
+      Long roomId = app.getRoom().getId();
+      int count = occupancyMap.getOrDefault(roomId, 0);
+      // 신청자 1명 + partner가 있으면 +1
+      int appCount = 1 + (app.getPartner() != null ? 1 : 0);
+      occupancyMap.put(roomId, count + appCount);
+      if (count == 0) {
+        residentNameMap.put(roomId, maskName(app.getApplicant().getName()));
+      }
+    }
+
+    // 층별 그룹핑
+    Map<Integer, List<ResponseDormRoom>> floorMap = new HashMap<>();
+    for (DormRoom room : rooms) {
+      int occ = Math.min(occupancyMap.getOrDefault(room.getId(), 0), 2);
+      String resident = occ == 1 ? residentNameMap.get(room.getId()) : null;
+      ResponseDormRoom dto = new ResponseDormRoom(room.getId(), room.getRoomNumber(), room.getFloor(), occ, resident);
+      floorMap.computeIfAbsent(room.getFloor(), k -> new ArrayList<>()).add(dto);
+    }
+
+    return floorMap.entrySet().stream()
+        .sorted(Map.Entry.comparingByKey())
+        .map(e -> new ResponseDormFloor(e.getKey(), e.getValue()))
+        .toList();
+  }
+
+  /// 현재 학기 문자열 (간단히 연도-학기로 생성)
+  private String currentSemester() {
+    int year = LocalDateTime.now().getYear();
+    int month = LocalDateTime.now().getMonthValue();
+    return year + "-" + (month <= 7 ? "1" : "2");
+  }
+
   /// 내 기숙사 신청 내역 — 마이페이지 기숙사 탭
   /// CANCELLED 상태는 프론트에서 취소 시 즉시 상태 변경하므로, 조회 목록에서는 제외
   /// partner가 있으면 이름을 그대로 반환 (마스킹 없음 — 본인 신청이므로)
@@ -164,22 +180,6 @@ public class DormService implements IDormService {
         app.getPartner() != null ? app.getPartner().getName() : null,
         app.getCreatedAt()
     )).toList();
-  }
-
-  /// 기숙사 신청 취소 — PENDING만 가능
-  /// 본인 신청인지 확인 후, status를 CANCELLED로 변경 (DB 삭제 아님)
-  @Override
-  public void cancelApplication(User user, Long applicationId) {
-    DormApplication app = dormAppRepo.findById(applicationId)
-        .orElseThrow(() -> new IllegalArgumentException("신청 내역을 찾을 수 없습니다."));
-    if (!app.getApplicant().getId().equals(user.getId())) {
-      throw new IllegalArgumentException("본인의 신청만 취소할 수 있습니다.");
-    }
-    if (app.getStatus() != DormApplicationStatus.PENDING) {
-      throw new IllegalArgumentException("대기 중인 신청만 취소할 수 있습니다.");
-    }
-    app.setStatus(DormApplicationStatus.CANCELLED);
-    dormAppRepo.save(app);
   }
 
   /// 이름 가운데 글자를 O로 마스킹 (개인정보 보호)

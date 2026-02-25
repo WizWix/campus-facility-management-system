@@ -15,7 +15,7 @@ public class DormDevLoader extends BaseDevLoader<DormRoom> {
   private final DormRoomRepository repo;
 
   public DormDevLoader(ResourceLoader loader, DormRoomRepository repo) {
-    super(loader, DormRoom.class, "data/dev/dorm-rooms.json");
+    super(loader, DormRoom.class, "data/dev/dorm-rooms.jsonc");
     this.repo = repo;
   }
 

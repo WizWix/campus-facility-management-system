@@ -12,4 +12,4 @@ import java.util.List;
 /// @param hours          운영시간
 /// @param menu           메뉴 목록
 public record ResponseFoodCourtStore(Long id, String name, String desc, String category,
-    String representative, String hours, List<ResponseStoreMenuItem> menu) {}
+                                     String representative, String hours, List<ResponseStoreMenuItem> menu) {}
