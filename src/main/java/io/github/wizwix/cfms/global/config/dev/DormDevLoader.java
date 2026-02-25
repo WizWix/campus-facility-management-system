@@ -1,5 +1,6 @@
 package io.github.wizwix.cfms.global.config.dev;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.wizwix.cfms.global.config.dev.base.BaseDevLoader;
 import io.github.wizwix.cfms.model.DormRoom;
 import io.github.wizwix.cfms.repo.DormRoomRepository;
@@ -14,8 +15,8 @@ import org.springframework.stereotype.Component;
 public class DormDevLoader extends BaseDevLoader<DormRoom> {
   private final DormRoomRepository repo;
 
-  public DormDevLoader(ResourceLoader loader, DormRoomRepository repo) {
-    super(loader, DormRoom.class, "data/dev/dorm-rooms.jsonc");
+  public DormDevLoader(ResourceLoader loader, ObjectMapper mapper, DormRoomRepository repo) {
+    super(loader, mapper, DormRoom.class, "data/dev/dorm-rooms.jsonc");
     this.repo = repo;
   }
 

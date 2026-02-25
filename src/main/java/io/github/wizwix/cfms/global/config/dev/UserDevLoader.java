@@ -1,5 +1,6 @@
 package io.github.wizwix.cfms.global.config.dev;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.wizwix.cfms.global.config.dev.base.BaseDevLoader;
 import io.github.wizwix.cfms.model.User;
 import io.github.wizwix.cfms.repo.UserRepository;
@@ -18,8 +19,8 @@ public class UserDevLoader extends BaseDevLoader<User> {
   private final PasswordEncoder encoder;
   private final UserRepository repo;
 
-  public UserDevLoader(ResourceLoader loader, PasswordEncoder encoder, UserRepository repo) {
-    super(loader, User.class, "data/dev/users.jsonc");
+  public UserDevLoader(ResourceLoader loader, ObjectMapper mapper, PasswordEncoder encoder, UserRepository repo) {
+    super(loader, mapper, User.class, "data/dev/users.jsonc");
     this.encoder = encoder;
     this.repo = repo;
   }

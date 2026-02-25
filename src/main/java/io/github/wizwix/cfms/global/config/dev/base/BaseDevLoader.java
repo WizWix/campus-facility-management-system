@@ -2,7 +2,6 @@ package io.github.wizwix.cfms.global.config.dev.base;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -19,13 +18,14 @@ public abstract class BaseDevLoader<T> implements DevDataLoader {
   private final Class<T> entityClass;
   private final String jsonPath;
 
-  protected BaseDevLoader(ResourceLoader loader, Class<T> entityClass, String jsonPath) {
+  protected BaseDevLoader(ResourceLoader loader, ObjectMapper mapper, Class<T> entityClass, String jsonPath) {
     this.loader = loader;
     this.entityClass = entityClass;
     this.jsonPath = jsonPath;
-    this.mapper = new ObjectMapper()
-        .registerModule(new JavaTimeModule())
-        .configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_COMMENTS, true);
+    // Spring이 주입하는 ObjectMapper 사용 (JavaTimeModule 등 이미 등록됨)
+    // JSONC(주석 포함 JSON) 파싱을 위해 ALLOW_COMMENTS 활성화
+    this.mapper = mapper;
+    this.mapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_COMMENTS, true);
   }
 
   protected void processItems(Consumer<T> action) {

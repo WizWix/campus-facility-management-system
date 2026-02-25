@@ -1,5 +1,6 @@
 package io.github.wizwix.cfms.global.config.dev;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.wizwix.cfms.global.config.dev.base.BaseDevLoader;
 import io.github.wizwix.cfms.model.Building;
 import io.github.wizwix.cfms.repo.BuildingRepository;
@@ -16,8 +17,8 @@ import org.springframework.stereotype.Component;
 public class BuildingDevLoader extends BaseDevLoader<Building> {
   private final BuildingRepository repo;
 
-  public BuildingDevLoader(ResourceLoader loader, BuildingRepository repo) {
-    super(loader, Building.class, "data/dev/buildings.jsonc");
+  public BuildingDevLoader(ResourceLoader loader, ObjectMapper mapper, BuildingRepository repo) {
+    super(loader, mapper, Building.class, "data/dev/buildings.jsonc");
     this.repo = repo;
   }
 

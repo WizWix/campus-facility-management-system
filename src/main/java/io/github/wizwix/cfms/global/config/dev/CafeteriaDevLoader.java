@@ -32,11 +32,11 @@ public class CafeteriaDevLoader implements DevDataLoader {
   private final ResourceLoader resourceLoader;
   private final CafeteriaStoreRepository storeRepo;
 
-  public CafeteriaDevLoader(ResourceLoader resourceLoader,
+  public CafeteriaDevLoader(ResourceLoader resourceLoader, ObjectMapper mapper,
                             CafeteriaStoreRepository storeRepo, CafeteriaStoreMenuRepository menuRepo,
                             CafeteriaMealRepository mealRepo, CafeteriaMealItemRepository mealItemRepo) {
     this.resourceLoader = resourceLoader;
-    this.mapper = new ObjectMapper();
+    this.mapper = mapper;
     this.storeRepo = storeRepo;
     this.menuRepo = menuRepo;
     this.mealRepo = mealRepo;
@@ -99,7 +99,7 @@ public class CafeteriaDevLoader implements DevDataLoader {
   }
 
   private void loadMeals() {
-    JsonNode root = readJson("data/dev/cafeteria-meals.json");
+    JsonNode root = readJson("data/dev/cafeteria-meals.jsonc");
     if (root == null) return;
 
     LocalDate today = LocalDate.now();

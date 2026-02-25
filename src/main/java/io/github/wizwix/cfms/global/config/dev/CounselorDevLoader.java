@@ -1,5 +1,6 @@
 package io.github.wizwix.cfms.global.config.dev;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.wizwix.cfms.global.config.dev.base.BaseDevLoader;
 import io.github.wizwix.cfms.model.Counselor;
 import io.github.wizwix.cfms.repo.CounselorRepository;
@@ -14,8 +15,8 @@ import org.springframework.stereotype.Component;
 public class CounselorDevLoader extends BaseDevLoader<Counselor> {
   private final CounselorRepository repo;
 
-  public CounselorDevLoader(ResourceLoader loader, CounselorRepository repo) {
-    super(loader, Counselor.class, "data/dev/counselors.json");
+  public CounselorDevLoader(ResourceLoader loader, ObjectMapper mapper, CounselorRepository repo) {
+    super(loader, mapper, Counselor.class, "data/dev/counselors.jsonc");
     this.repo = repo;
   }
 
