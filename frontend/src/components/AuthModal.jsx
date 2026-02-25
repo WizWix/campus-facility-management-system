@@ -15,6 +15,7 @@ export function AuthModal({onClose}) {
   const {login} = useAuth();
   const [tab, setTab] = useState('login'); // 'login' | 'signup'
   const [selectedRole, setSelectedRole] = useState(null);
+  const [selectedGender, setSelectedGender] = useState(null);
 
   // 로그인 폼
   const [loginId, setLoginId] = useState('');
@@ -47,6 +48,10 @@ export function AuthModal({onClose}) {
       alert('회원 유형을 선택해주세요.');
       return;
     }
+    if (!selectedGender) {
+      alert('성별을 선택해주세요.');
+      return;
+    }
     if (!isKorean(signupName)) {
       alert('이름은 한글 실명(2~5자)으로 입력해주세요.\n닉네임은 사용할 수 없습니다.');
       return;
@@ -69,7 +74,7 @@ export function AuthModal({onClose}) {
     }
 
     try {
-      await signupApi(signupId, signupPw, signupName, signupEmail);
+      await signupApi(signupId, signupPw, signupName, signupEmail, selectedGender);
       alert(`회원가입이 완료되었습니다!\n${signupName}님, 로그인해주세요.`);
       setTab('login');
     } catch (e) {
@@ -122,6 +127,19 @@ export function AuthModal({onClose}) {
                 <div className="role-label">{r.label}</div>
                 <div className="role-desc">{r.desc.split('\n').map((line, i) => <span
                     key={i}>{line}<br/></span>)}</div>
+              </div>))}
+            </div>
+          </div>
+          <div className="mb-3">
+            <label className="form-label">성별 선택</label>
+            <div className="role-cards">
+              {[{key: 'MALE', icon: '\uD83D\uDE4B\u200D\u2642\uFE0F', label: '남성'}, {key: 'FEMALE', icon: '\uD83D\uDE4B\u200D\u2640\uFE0F', label: '여성'}].map(g => (<div
+                  key={g.key}
+                  className={`role-card${selectedGender === g.key ? ' selected' : ''}`}
+                  onClick={() => setSelectedGender(g.key)}
+              >
+                <div className="role-icon">{g.icon}</div>
+                <div className="role-label">{g.label}</div>
               </div>))}
             </div>
           </div>

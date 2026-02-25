@@ -8,4 +8,5 @@ package io.github.wizwix.cfms.dto.request.auth;
 /// @param oldPassword [String] 기존 비밀번호 (불일치 시 갱신 거부)
 /// @param newPassword [String] 새 비밀번호
 /// @param email       [String] 새 이메일 주소
-public record RequestUserUpdate(String oldPassword, String newPassword, String email) {}
+/// @param gender      [String] 성별 ("MALE" or "FEMALE")
+public record RequestUserUpdate(String oldPassword, String newPassword, String email, String gender) {}

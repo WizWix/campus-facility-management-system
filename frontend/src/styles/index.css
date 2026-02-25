@@ -233,12 +233,67 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #f5f7fa; min-height:
 .caf-discount-name { flex: 1; color: #2d3748; font-weight: 500; }
 .caf-discount-save { color: #e53e3e; font-weight: 600; font-size: .82rem; }
 
+/* ── 기숙사 성별 선택 카드 ── */
+.dorm-gender-male:hover { border-color: #4299e1; background: #ebf8ff; }
+.dorm-gender-female:hover { border-color: #f56565; background: #fff5f5; }
+
+/* ── 기숙사 페이지 (DormitoryPage.jsx) ── */
+.dorm-status-legend { display: flex; gap: 16px; margin-bottom: 20px; font-size: .78rem; color: #718096; }
+.dorm-legend-item { display: flex; align-items: center; gap: 4px; }
+.dorm-legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+.dorm-room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+.dorm-room-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; transition: transform .15s, box-shadow .15s; }
+.dorm-room-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+.dorm-room-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.dorm-room-number { font-size: 1.1rem; font-weight: 700; color: #1a365d; }
+.dorm-room-occ { font-size: .78rem; color: #718096; display: flex; align-items: center; }
+.dorm-room-resident { font-size: .8rem; color: #4a5568; margin-bottom: 8px; padding: 4px 8px; background: #f7fafc; border-radius: 6px; }
+.dorm-room-actions { display: flex; gap: 8px; }
+.dorm-room-actions .btn { font-size: .78rem; padding: 4px 12px; }
+
+/* ── 마이페이지 (MyPage.jsx) ── */
+.mypage-layout { display: flex; min-height: calc(100vh - 60px); }
+.mypage-sidebar { width: 240px; min-width: 240px; border-right: 1px solid #e2e8f0; background: #fff; }
+.mypage-sidebar-item { padding: 18px 28px; font-size: .92rem; font-weight: 500; color: #4a5568; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: all .2s; }
+.mypage-sidebar-item:hover { background: #f7fafc; color: #2c5282; }
+.mypage-sidebar-item.active { background: #1a365d; color: #fff; font-weight: 700; }
+.mypage-content { flex: 1; padding: 32px 40px; background: #fafbfc; }
+.mypage-section-header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #1a365d; }
+.mypage-section-header h3 { font-size: 1.5rem; font-weight: 900; color: #1a365d; }
+.mypage-section-sub { font-size: .85rem; color: #718096; margin-top: 4px; }
+.mypage-loading { text-align: center; padding: 48px; color: #a0aec0; font-size: .95rem; }
+.mypage-empty { text-align: center; padding: 48px; color: #a0aec0; font-size: .95rem; background: #fff; border-radius: 10px; border: 1px solid #e2e8f0; }
+
+.mypage-profile-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 24px; margin-bottom: 28px; }
+.mypage-profile-row { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; font-size: .9rem; }
+.mypage-profile-row:last-child { border-bottom: none; }
+.mypage-label { font-weight: 600; color: #718096; min-width: 120px; }
+
+.mypage-edit-section { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 24px; }
+.mypage-edit-section h4 { font-size: 1.1rem; font-weight: 700; color: #2d3748; margin-bottom: 16px; }
+
+.mypage-table { background: #fff; border-radius: 10px; overflow: hidden; }
+.mypage-table thead th { background: #f7fafc; font-size: .82rem; font-weight: 600; color: #718096; border-bottom: 2px solid #e2e8f0; padding: 12px 16px; }
+.mypage-table tbody td { font-size: .88rem; color: #2d3748; padding: 14px 16px; vertical-align: middle; }
+
+.mypage-badge { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: .75rem; font-weight: 600; }
+.mypage-badge-pending { background: #fefcbf; color: #b7791f; }
+.mypage-badge-approved { background: #c6f6d5; color: #276749; }
+.mypage-badge-rejected { background: #fed7d7; color: #c53030; }
+.mypage-badge-cancelled { background: #e2e8f0; color: #718096; }
+
 /* 반응형 */
 @media (max-width: 992px) {
   .caf-meal-grid { grid-template-columns: 1fr; }
+  .dorm-room-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
 }
 @media (max-width: 768px) {
   .caf-foodcourt { flex-direction: column; }
   .caf-foodcourt .floor-list { width: 100%; min-width: auto; border-right: none; border-bottom: 1px solid #e2e8f0; display: flex; overflow-x: auto; }
   .caf-foodcourt .floor-item { min-width: 160px; }
+  .mypage-layout { flex-direction: column; }
+  .mypage-sidebar { width: 100%; min-width: auto; border-right: none; border-bottom: 1px solid #e2e8f0; display: flex; overflow-x: auto; }
+  .mypage-sidebar-item { min-width: 120px; text-align: center; }
+  .mypage-content { padding: 20px 16px; }
 }

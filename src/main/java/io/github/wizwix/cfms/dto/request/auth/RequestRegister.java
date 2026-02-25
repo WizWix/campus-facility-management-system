@@ -9,4 +9,4 @@ package io.github.wizwix.cfms.dto.request.auth;
 /// @param name       [String] 이름
 /// @param password   [String] 비밀번호
 /// @param email      [String] 이메일 주소
-public record RequestRegister(String userNumber, String name, String password, String email) {}
+public record RequestRegister(String userNumber, String name, String password, String email, String gender) {}

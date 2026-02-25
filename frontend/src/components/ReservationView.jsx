@@ -55,7 +55,7 @@ export function ReservationView({buildingKey, buildingData, jumpToRoom}) {
       setShowAuth(true);
       return;
     }
-    if (currentUser.role === '학생') {
+    if (currentUser.role === 'ROLE_STUDENT') {
       alert('학생은 직접 시설 예약이 불가합니다.\n동아리장 또는 교수만 예약할 수 있습니다.');
       return;
     }

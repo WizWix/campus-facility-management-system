@@ -3,9 +3,14 @@ import {Link} from 'react-router-dom';
 import {useAuth} from '../context/AuthContext.jsx';
 import {AuthModal} from './AuthModal.jsx';
 
+const ROLE_LABELS = {
+  ROLE_STUDENT: '학생', ROLE_PROFESSOR: '교수', ROLE_ADMIN: '동아리장',
+};
+
 export function Header() {
   const {currentUser, logout} = useAuth();
   const [showAuth, setShowAuth] = useState(false);
+  const roleLabel = currentUser ? (ROLE_LABELS[currentUser.role] || currentUser.role) : '';
 
   return (<>
     <header className="campus-header">
@@ -20,12 +25,12 @@ export function Header() {
         </div>
         <div className="d-flex gap-2 align-items-center">
           {!currentUser ? (<>
-            <button className="btn btn-outline-light btn-sm" onClick={() => setShowAuth(true)}>내 예약</button>
+            <button className="btn btn-outline-light btn-sm" onClick={() => setShowAuth(true)}>마이페이지</button>
             <button className="btn btn-light btn-sm" onClick={() => setShowAuth(true)}>로그인</button>
           </>) : (<div className="user-display">
-            <span className="user-name">{currentUser.name}</span>
-            <span className="user-role">{currentUser.role}</span>
-            <button className="btn btn-outline-light btn-sm">내 예약</button>
+            <span className="user-role">{roleLabel}</span>
+            <span className="user-name">{currentUser.name}님 환영합니다</span>
+            <Link to="/mypage" className="btn btn-outline-light btn-sm">마이페이지</Link>
             <button className="btn btn-outline-light btn-sm" onClick={logout}>로그아웃</button>
           </div>)}
         </div>

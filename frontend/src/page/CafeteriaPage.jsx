@@ -1,6 +1,6 @@
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {TODAY_MEALS, FOODCOURT_STORES} from '../data/cafeteria.js';
+import {fetchTodayMeals, fetchFoodCourtStores} from '../data/api.js';
 
 // 푸드코트 가게 카테고리 → 아이콘 매핑 (cafeteria.js의 category 필드와 대응)
 const STORE_ICONS = {
@@ -15,10 +15,27 @@ const STORE_ICONS = {
 export function CafeteriaPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('meal');
-  const [selectedStore, setSelectedStore] = useState(FOODCOURT_STORES[0]?.id || null);
+  const [selectedStore, setSelectedStore] = useState(null);
+  const [mealsData, setMealsData] = useState(null);
+  const [stores, setStores] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([fetchTodayMeals(), fetchFoodCourtStores()])
+      .then(([meals, storeList]) => {
+        setMealsData(meals);
+        setStores(storeList);
+        if (storeList.length > 0) setSelectedStore(storeList[0].id);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const now = new Date();
-  const store = FOODCOURT_STORES.find(s => s.id === selectedStore);
+  const store = stores.find(s => s.id === selectedStore);
+
+  if (loading) {
+    return <div style={{padding: 40, textAlign: 'center', color: '#718096'}}>로딩 중...</div>;
+  }
 
   return (<div id="cafeteriaView">
     {/* 브레드크럼 */}
@@ -64,7 +81,7 @@ export function CafeteriaPage() {
           <div className="info-col">
             <div className="caf-today-summary">
               <div className="caf-summary-title">오늘의 학식 요약</div>
-              {TODAY_MEALS.meals.map(meal => (
+              {(mealsData?.meals || []).map(meal => (
                 <div key={meal.type} className="caf-summary-row">
                   <span className="caf-summary-icon">{meal.icon}</span>
                   <span className="caf-summary-type">{meal.type}</span>
@@ -89,8 +106,8 @@ export function CafeteriaPage() {
 
     {/* 탭 콘텐츠 */}
     {activeTab === 'meal'
-      ? <MealSection meals={TODAY_MEALS.meals}/>
-      : <FoodCourtSection stores={FOODCOURT_STORES} selectedStore={selectedStore}
+      ? <MealSection meals={mealsData?.meals || []}/>
+      : <FoodCourtSection stores={stores} selectedStore={selectedStore}
                           onSelectStore={setSelectedStore} store={store}/>
     }
   </div>);

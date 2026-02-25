@@ -2,6 +2,10 @@ import {useState} from 'react';
 import {useAuth} from '../context/AuthContext.jsx';
 import {createReservation} from '../data/api.js';
 
+const ROLE_LABELS = {
+  ROLE_STUDENT: '학생', ROLE_PROFESSOR: '교수', ROLE_ADMIN: '동아리장',
+};
+
 export function ReserveModal({buildingName, room, selectedDay, startHour, onClose, onReserved}) {
   const {currentUser} = useAuth();
   const now = new Date();
@@ -32,7 +36,7 @@ export function ReserveModal({buildingName, room, selectedDay, startHour, onClos
         endHour: end,
         purpose: purpose,
         title: purpose,
-        detail: `${currentUser.name}(${currentUser.role})`,
+        detail: `${currentUser.name}(${ROLE_LABELS[currentUser.role] || currentUser.role})`,
       });
       onClose();
       if (onReserved) onReserved();
@@ -55,7 +59,7 @@ export function ReserveModal({buildingName, room, selectedDay, startHour, onClos
         <div className="mb-3">
           <label className="form-label">예약 주체</label>
           <input type="text" className="form-control"
-                 value={currentUser ? `${currentUser.name}(${currentUser.role})` : ''} readOnly
+                 value={currentUser ? `${currentUser.name}(${ROLE_LABELS[currentUser.role] || currentUser.role})` : ''} readOnly
                  style={{background: '#F7FAFC'}}/>
         </div>
         <div className="row mb-3">
