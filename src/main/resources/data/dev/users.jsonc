@@ -1,0 +1,29 @@
+[
+  // 학생
+  {
+    "email": "student1@university.ac.kr",
+    "gender": "MALE",
+    "name": "홍길동",
+    "number": "26001002",
+    "password": "123",
+    "role": "ROLE_STUDENT"
+  },
+  // 교수
+  {
+    "email": "professor1@university.ac.kr",
+    "gender": "MALE",
+    "name": "장길산",
+    "number": "26100200",
+    "password": "123",
+    "role": "ROLE_PROFESSOR"
+  },
+  // 관리자
+  {
+    "email": "admin1@university.ac.kr",
+    "gender": "FEMALE",
+    "name": "사군자",
+    "number": "26999999",
+    "password": "123",
+    "role": "ROLE_ADMIN"
+  }
+]

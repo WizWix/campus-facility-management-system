@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface BuildingRepository extends JpaRepository<Building, Long> {
-  boolean existsByIdentifier(String identifier);
+  boolean existsBySlug(String slug);
 
-  Optional<Building> findByIdentifier(String identifier);
+  Optional<Building> findBySlug(String slug);
 }

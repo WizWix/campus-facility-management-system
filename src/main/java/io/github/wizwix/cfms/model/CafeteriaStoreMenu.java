@@ -23,17 +23,17 @@ public class CafeteriaStoreMenu {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+  /// 메뉴명
+  private String name;
+  /// 할인 사유 (e.g. '학생 할인', nullable)
+  private String discountLabel;
+  /// 할인가 (nullable)
+  private Integer discountPrice;
+  /// 인기 메뉴 여부
+  private Boolean popular;
+  /// 정가 (원)
+  private Integer price;
   /// 소속 가게
   @ManyToOne(fetch = FetchType.LAZY)
   private CafeteriaStore store;
-  /// 메뉴명
-  private String name;
-  /// 정가 (원)
-  private Integer price;
-  /// 할인가 (nullable)
-  private Integer discountPrice;
-  /// 할인 사유 (e.g. '학생 할인', nullable)
-  private String discountLabel;
-  /// 인기 메뉴 여부
-  private Boolean popular;
 }

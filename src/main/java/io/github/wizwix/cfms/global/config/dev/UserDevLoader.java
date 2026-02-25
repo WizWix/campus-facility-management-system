@@ -19,7 +19,7 @@ public class UserDevLoader extends BaseDevLoader<User> {
   private final UserRepository repo;
 
   public UserDevLoader(ResourceLoader loader, PasswordEncoder encoder, UserRepository repo) {
-    super(loader, User.class, "data/dev/users.json");
+    super(loader, User.class, "data/dev/users.jsonc");
     this.encoder = encoder;
     this.repo = repo;
   }

@@ -21,6 +21,10 @@ spring:
       port: 35729 # Default value. Leave this for later reference.
     restart:
       enabled: true
+  jackson:
+    parser:
+      allow-comments: true
+      allow-trailing-comma: true
   jpa:
     hibernate:
       ddl-auto: update

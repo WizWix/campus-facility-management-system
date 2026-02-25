@@ -29,39 +29,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CafeteriaService implements ICafeteriaService {
-  private final CafeteriaMealRepository mealRepository;
   private final CafeteriaMealItemRepository mealItemRepository;
-  private final CafeteriaStoreRepository storeRepository;
+  private final CafeteriaMealRepository mealRepository;
   private final CafeteriaStoreMenuRepository storeMenuRepository;
-
-  @Override
-  public ResponseCafeteria getMeals(LocalDate date) {
-    List<CafeteriaMeal> meals = mealRepository.findByDate(date);
-    if (meals.isEmpty()) {
-      return new ResponseCafeteria(date, List.of());
-    }
-
-    List<CafeteriaMealItem> allItems = mealItemRepository.findByMealIn(meals);
-    Map<Long, List<CafeteriaMealItem>> itemsByMealId = allItems.stream()
-        .collect(Collectors.groupingBy(item -> item.getMeal().getId()));
-
-    List<ResponseMeal> responseMeals = meals.stream()
-        .map(meal -> {
-          List<ResponseMealItem> items = itemsByMealId.getOrDefault(meal.getId(), List.of()).stream()
-              .map(item -> new ResponseMealItem(
-                  item.getName(),
-                  item.getPrice(),
-                  item.getDiscountPrice() != null
-                      ? new ResponseDiscount(item.getDiscountPrice(), item.getDiscountLabel())
-                      : null
-              ))
-              .toList();
-          return new ResponseMeal(toKorean(meal.getMealType()), meal.getTime(), meal.getIcon(), items);
-        })
-        .toList();
-
-    return new ResponseCafeteria(date, responseMeals);
-  }
+  private final CafeteriaStoreRepository storeRepository;
 
   @Override
   public List<ResponseFoodCourtStore> getFoodCourtStores() {
@@ -92,6 +63,35 @@ public class CafeteriaService implements ICafeteriaService {
           );
         })
         .toList();
+  }
+
+  @Override
+  public ResponseCafeteria getMeals(LocalDate date) {
+    List<CafeteriaMeal> meals = mealRepository.findByDate(date);
+    if (meals.isEmpty()) {
+      return new ResponseCafeteria(date, List.of());
+    }
+
+    List<CafeteriaMealItem> allItems = mealItemRepository.findByMealIn(meals);
+    Map<Long, List<CafeteriaMealItem>> itemsByMealId = allItems.stream()
+        .collect(Collectors.groupingBy(item -> item.getMeal().getId()));
+
+    List<ResponseMeal> responseMeals = meals.stream()
+        .map(meal -> {
+          List<ResponseMealItem> items = itemsByMealId.getOrDefault(meal.getId(), List.of()).stream()
+              .map(item -> new ResponseMealItem(
+                  item.getName(),
+                  item.getPrice(),
+                  item.getDiscountPrice() != null
+                      ? new ResponseDiscount(item.getDiscountPrice(), item.getDiscountLabel())
+                      : null
+              ))
+              .toList();
+          return new ResponseMeal(toKorean(meal.getMealType()), meal.getTime(), meal.getIcon(), items);
+        })
+        .toList();
+
+    return new ResponseCafeteria(date, responseMeals);
   }
 
   private String toKorean(MealType type) {

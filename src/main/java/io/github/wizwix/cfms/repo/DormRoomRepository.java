@@ -7,9 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface DormRoomRepository extends JpaRepository<DormRoom, Long> {
+  boolean existsByRoomNumber(String roomNumber);
+
   List<DormRoom> findByGender(Gender gender);
 
   List<DormRoom> findByGenderAndFloor(Gender gender, int floor);
-
-  boolean existsByRoomNumber(String roomNumber);
 }

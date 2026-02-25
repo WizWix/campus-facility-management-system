@@ -9,9 +9,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface DormApplicationRepository extends JpaRepository<DormApplication, Long> {
-  List<DormApplication> findByRoomInAndSemesterAndStatusIn(List<DormRoom> rooms, String semester, List<DormApplicationStatus> statuses);
+  boolean existsByApplicantAndSemesterAndStatusIn(User applicant, String semester, List<DormApplicationStatus> statuses);
 
   List<DormApplication> findByApplicantAndStatusIn(User applicant, List<DormApplicationStatus> statuses);
 
-  boolean existsByApplicantAndSemesterAndStatusIn(User applicant, String semester, List<DormApplicationStatus> statuses);
+  List<DormApplication> findByRoomInAndSemesterAndStatusIn(List<DormRoom> rooms, String semester, List<DormApplicationStatus> statuses);
 }

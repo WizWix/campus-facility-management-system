@@ -23,12 +23,12 @@ public class CafeteriaStore {
   private Long id;
   /// 가게명 (e.g. '한솥도시락')
   private String name;
-  /// 설명 (e.g. '든든한 한 끼, 다양한 도시락 메뉴')
-  private String description;
   /// 카테고리 (한식/분식/면류/치킨/돈까스/양식/백반/카페)
   private String category;
-  /// 대표 메뉴명
-  private String representative;
+  /// 설명 (e.g. '든든한 한 끼, 다양한 도시락 메뉴')
+  private String description;
   /// 운영시간 (e.g. '10:00 ~ 20:00')
   private String hours;
+  /// 대표 메뉴명
+  private String representative;
 }

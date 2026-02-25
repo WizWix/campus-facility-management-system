@@ -20,17 +20,17 @@ import java.util.List;
 public class CafeteriaApiController {
   private final CafeteriaService cafeteriaService;
 
+  /// 푸드코트 가게 전체
+  @GetMapping("/foodcourt")
+  public ResponseEntity<List<ResponseFoodCourtStore>> getFoodCourtStores() {
+    return ResponseEntity.ok(cafeteriaService.getFoodCourtStores());
+  }
+
   /// 오늘의 학식 (date 파라미터 없으면 오늘 날짜)
   @GetMapping("/meals")
   public ResponseEntity<ResponseCafeteria> getMeals(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
     if (date == null) date = LocalDate.now();
     return ResponseEntity.ok(cafeteriaService.getMeals(date));
-  }
-
-  /// 푸드코트 가게 전체
-  @GetMapping("/foodcourt")
-  public ResponseEntity<List<ResponseFoodCourtStore>> getFoodCourtStores() {
-    return ResponseEntity.ok(cafeteriaService.getFoodCourtStores());
   }
 }

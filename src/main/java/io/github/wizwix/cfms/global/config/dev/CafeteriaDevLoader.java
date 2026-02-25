@@ -25,16 +25,16 @@ import java.time.LocalDate;
 @Profile("dev")
 @Slf4j
 public class CafeteriaDevLoader implements DevDataLoader {
-  private final ResourceLoader resourceLoader;
   private final ObjectMapper mapper;
-  private final CafeteriaStoreRepository storeRepo;
-  private final CafeteriaStoreMenuRepository menuRepo;
-  private final CafeteriaMealRepository mealRepo;
   private final CafeteriaMealItemRepository mealItemRepo;
+  private final CafeteriaMealRepository mealRepo;
+  private final CafeteriaStoreMenuRepository menuRepo;
+  private final ResourceLoader resourceLoader;
+  private final CafeteriaStoreRepository storeRepo;
 
   public CafeteriaDevLoader(ResourceLoader resourceLoader,
-      CafeteriaStoreRepository storeRepo, CafeteriaStoreMenuRepository menuRepo,
-      CafeteriaMealRepository mealRepo, CafeteriaMealItemRepository mealItemRepo) {
+                            CafeteriaStoreRepository storeRepo, CafeteriaStoreMenuRepository menuRepo,
+                            CafeteriaMealRepository mealRepo, CafeteriaMealItemRepository mealItemRepo) {
     this.resourceLoader = resourceLoader;
     this.mapper = new ObjectMapper();
     this.storeRepo = storeRepo;
@@ -61,7 +61,7 @@ public class CafeteriaDevLoader implements DevDataLoader {
   }
 
   private void loadStores() {
-    JsonNode root = readJson("data/dev/cafeteria-stores.json");
+    JsonNode root = readJson("data/dev/cafeteria-stores.jsonc");
     if (root == null) return;
 
     for (JsonNode node : root) {
@@ -83,6 +83,18 @@ public class CafeteriaDevLoader implements DevDataLoader {
         menu.setPopular(menuNode.get("popular").asBoolean());
         menuRepo.save(menu);
       }
+    }
+  }
+
+  private JsonNode readJson(String path) {
+    try {
+      Resource resource = resourceLoader.getResource("classpath:" + path);
+      try (InputStream is = resource.getInputStream()) {
+        return mapper.readTree(is);
+      }
+    } catch (Exception e) {
+      log.error("Error reading JSON from {}", path, e);
+      return null;
     }
   }
 
@@ -109,18 +121,6 @@ public class CafeteriaDevLoader implements DevDataLoader {
         item.setDiscountLabel(itemNode.get("discountLabel").isNull() ? null : itemNode.get("discountLabel").asText());
         mealItemRepo.save(item);
       }
-    }
-  }
-
-  private JsonNode readJson(String path) {
-    try {
-      Resource resource = resourceLoader.getResource("classpath:" + path);
-      try (InputStream is = resource.getInputStream()) {
-        return mapper.readTree(is);
-      }
-    } catch (Exception e) {
-      log.error("Error reading JSON from {}", path, e);
-      return null;
     }
   }
 }

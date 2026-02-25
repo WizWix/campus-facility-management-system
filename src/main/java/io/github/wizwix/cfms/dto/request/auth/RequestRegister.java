@@ -1,5 +1,7 @@
 package io.github.wizwix.cfms.dto.request.auth;
 
+import io.github.wizwix.cfms.model.enums.Gender;
+
 /// 회원 가입 요청
 ///
 /// 이 프로젝트는 이미 학생과 교사 정보를 갖고 있는 대학이 서비스하는 것을 전제로 삼았기에, 회원 가입은 본래 불가능해야 함.
@@ -9,4 +11,5 @@ package io.github.wizwix.cfms.dto.request.auth;
 /// @param name       [String] 이름
 /// @param password   [String] 비밀번호
 /// @param email      [String] 이메일 주소
-public record RequestRegister(String userNumber, String name, String password, String email, String gender) {}
+/// @param gender     [Gender] 성별
+public record RequestRegister(String userNumber, String name, String password, String email, Gender gender) {}

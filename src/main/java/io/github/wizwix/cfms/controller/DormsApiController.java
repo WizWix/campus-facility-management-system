@@ -30,12 +30,6 @@ public class DormsApiController {
   private final DormService dormService;
   private final UserRepository userRepo;
 
-  /// 기숙사 호실 목록 (층별) — 성별 필터
-  @GetMapping("/rooms")
-  public ResponseEntity<List<ResponseDormFloor>> getDormRooms(@RequestParam Gender gender) {
-    return ResponseEntity.ok(dormService.getDormRooms(gender));
-  }
-
   /// 기숙사 입주 신청 (로그인 필요)
   @PostMapping("/apply")
   public ResponseEntity<ResponseDormApplyResult> apply(Authentication auth, @Valid @RequestBody RequestDormApply request) {
@@ -43,15 +37,6 @@ public class DormsApiController {
     User currentUser = userRepo.findByNumberAndEnabledTrue(userNumber)
         .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
     return ResponseEntity.ok(dormService.apply(currentUser, request));
-  }
-
-  /// 내 기숙사 신청 내역 조회 — 마이페이지 기숙사 탭에서 사용
-  /// PENDING/APPROVED/REJECTED 상태만 반환 (CANCELLED는 제외)
-  @GetMapping("/my")
-  public ResponseEntity<List<ResponseDormMyApplication>> myApplications(Authentication auth) {
-    User user = userRepo.findByNumberAndEnabledTrue(auth.getName())
-        .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-    return ResponseEntity.ok(dormService.getMyApplications(user));
   }
 
   /// 기숙사 신청 취소 — PENDING 상태인 신청만 취소 가능
@@ -62,5 +47,20 @@ public class DormsApiController {
         .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
     dormService.cancelApplication(user, id);
     return ResponseEntity.ok().build();
+  }
+
+  /// 기숙사 호실 목록 (층별) — 성별 필터
+  @GetMapping("/rooms")
+  public ResponseEntity<List<ResponseDormFloor>> getDormRooms(@RequestParam Gender gender) {
+    return ResponseEntity.ok(dormService.getDormRooms(gender));
+  }
+
+  /// 내 기숙사 신청 내역 조회 — 마이페이지 기숙사 탭에서 사용
+  /// PENDING/APPROVED/REJECTED 상태만 반환 (CANCELLED는 제외)
+  @GetMapping("/my")
+  public ResponseEntity<List<ResponseDormMyApplication>> myApplications(Authentication auth) {
+    User user = userRepo.findByNumberAndEnabledTrue(auth.getName())
+        .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    return ResponseEntity.ok(dormService.getMyApplications(user));
   }
 }

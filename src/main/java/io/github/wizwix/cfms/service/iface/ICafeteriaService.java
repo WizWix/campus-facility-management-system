@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface ICafeteriaService {
-  ResponseCafeteria getMeals(LocalDate date);
   List<ResponseFoodCourtStore> getFoodCourtStores();
+
+  ResponseCafeteria getMeals(LocalDate date);
 }

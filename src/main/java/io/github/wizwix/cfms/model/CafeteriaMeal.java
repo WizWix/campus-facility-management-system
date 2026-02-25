@@ -28,11 +28,11 @@ public class CafeteriaMeal {
   private Long id;
   /// 날짜
   private LocalDate date;
+  /// 아이콘 (e.g. '🌅')
+  private String icon;
   /// 끼니 유형 (BREAKFAST/LUNCH/DINNER)
   @Enumerated(EnumType.STRING)
   private MealType mealType;
   /// 시간대 (e.g. '08:00 ~ 09:30')
   private String time;
-  /// 아이콘 (e.g. '🌅')
-  private String icon;
 }
