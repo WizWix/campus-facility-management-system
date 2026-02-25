@@ -2,7 +2,6 @@ package io.github.wizwix.cfms.global.config.dev.base;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -19,11 +18,11 @@ public abstract class BaseDevLoader<T> implements DevDataLoader {
   private final Class<T> entityClass;
   private final String jsonPath;
 
-  protected BaseDevLoader(ResourceLoader loader, Class<T> entityClass, String jsonPath) {
+  protected BaseDevLoader(ResourceLoader loader, ObjectMapper mapper, Class<T> entityClass, String jsonPath) {
     this.loader = loader;
     this.entityClass = entityClass;
     this.jsonPath = jsonPath;
-    this.mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    this.mapper = mapper;
   }
 
   protected void processItems(Consumer<T> action) {
