@@ -97,7 +97,7 @@ public class UserService implements IUserService {
     user.setCreatedAt(LocalDateTime.now());
     user.setRole(UserRole.ROLE_STUDENT);
     if (request.gender() != null) {
-      user.setGender(Gender.valueOf(request.gender()));
+      user.setGender(request.gender());
     }
 
     // `.save` is redundant but I'll make sure the line exists
@@ -138,8 +138,8 @@ public class UserService implements IUserService {
       user.setEmail(request.email());
     }
     // 기존 가입자 중 성별이 NULL인 경우가 있어서 마이페이지에서 수정 가능하도록 추가
-    if (request.gender() != null && !request.gender().isBlank()) {
-      user.setGender(Gender.valueOf(request.gender()));
+    if (request.gender() != null) {
+      user.setGender(request.gender());
     }
     userRepository.save(user);
   }
