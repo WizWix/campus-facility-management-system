@@ -12,7 +12,6 @@ import {CampusMapPage} from './page/CampusMapPage.jsx';
 import {CounselingPage} from './page/CounselingPage.jsx';
 import {DormitoryPage} from './page/DormitoryPage.jsx';
 import {MyPage} from './page/MyPage.jsx';
-import {CounselingPage} from './page/CounselingPage.jsx';
 
 createRoot(document.getElementById('root')).render(<StrictMode>
   <BrowserRouter>

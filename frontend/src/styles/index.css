@@ -60,7 +60,8 @@ body { background: #F5F7FA; font-family: 'Noto Sans KR', sans-serif; min-height:
 .breadcrumb-nav a:hover { color: #2C5282; }
 
 .breadcrumb-nav .sep { margin: 0 8px; }
-.breadcrumb-nav .current { color: #2d3748; font-weight: 500; }
+
+.breadcrumb-nav .current { color: #2D3748; font-weight: 500; }
 
 .breadcrumb-nav .current { color: #2D3748; font-weight: 500; }
 
@@ -81,9 +82,12 @@ body { background: #F5F7FA; font-family: 'Noto Sans KR', sans-serif; min-height:
 .semester-box { text-align: center; }
 
 .semester-icon { font-size: 2.5rem; margin-bottom: .5rem; }
-.semester-label { font-size: .8rem; color: #a0aec0; margin-bottom: 2px; }
-.semester-value { font-size: 1.15rem; font-weight: 700; color: #2d3748; }
-.semester-sub { font-size: .82rem; color: #718096; margin-top: 4px; }
+
+.semester-label { color: #A0AEC0; font-size: .8rem; margin-bottom: 2px; }
+
+.semester-value { color: #2D3748; font-size: 1.15rem; font-weight: 700; }
+
+.semester-sub { color: #718096; font-size: .82rem; margin-top: 4px; }
 
 .semester-label { color: #A0AEC0; font-size: .8rem; margin-bottom: 2px; }
 
@@ -436,16 +440,26 @@ body { background: #F5F7FA; font-family: 'Noto Sans KR', sans-serif; min-height:
 
 /* ── 마이페이지 (MyPage.jsx) ── */
 .mypage-layout { display: flex; min-height: calc(100vh - 60px); }
-.mypage-sidebar { width: 240px; min-width: 240px; border-right: 1px solid #e2e8f0; background: #fff; }
-.mypage-sidebar-item { padding: 18px 28px; font-size: .92rem; font-weight: 500; color: #4a5568; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: all .2s; }
-.mypage-sidebar-item:hover { background: #f7fafc; color: #2c5282; }
-.mypage-sidebar-item.active { background: #1a365d; color: #fff; font-weight: 700; }
-.mypage-content { flex: 1; padding: 32px 40px; background: #fafbfc; }
-.mypage-section-header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #1a365d; }
-.mypage-section-header h3 { font-size: 1.5rem; font-weight: 900; color: #1a365d; }
-.mypage-section-sub { font-size: .85rem; color: #718096; margin-top: 4px; }
-.mypage-loading { text-align: center; padding: 48px; color: #a0aec0; font-size: .95rem; }
-.mypage-empty { text-align: center; padding: 48px; color: #a0aec0; font-size: .95rem; background: #fff; border-radius: 10px; border: 1px solid #e2e8f0; }
+
+.mypage-sidebar { background: #FFF; border-right: 1px solid #E2E8F0; min-width: 240px; width: 240px; }
+
+.mypage-sidebar-item { border-bottom: 1px solid #F0F0F0; color: #4A5568; cursor: pointer; font-size: .92rem; font-weight: 500; padding: 18px 28px; transition: all .2s; }
+
+.mypage-sidebar-item:hover { background: #F7FAFC; color: #2C5282; }
+
+.mypage-sidebar-item.active { background: #1A365D; color: #FFF; font-weight: 700; }
+
+.mypage-content { background: #FAFBFC; flex: 1; padding: 32px 40px; }
+
+.mypage-section-header { border-bottom: 2px solid #1A365D; margin-bottom: 24px; padding-bottom: 16px; }
+
+.mypage-section-header h3 { color: #1A365D; font-size: 1.5rem; font-weight: 900; }
+
+.mypage-section-sub { color: #718096; font-size: .85rem; margin-top: 4px; }
+
+.mypage-loading { color: #A0AEC0; font-size: .95rem; padding: 48px; text-align: center; }
+
+.mypage-empty { background: #FFF; border: 1px solid #E2E8F0; border-radius: 10px; color: #A0AEC0; font-size: .95rem; padding: 48px; text-align: center; }
 
 .mypage-sidebar { background: #FFF; border-right: 1px solid #E2E8F0; min-width: 240px; width: 240px; }
 
@@ -472,7 +486,8 @@ body { background: #F5F7FA; font-family: 'Noto Sans KR', sans-serif; min-height:
 .mypage-profile-row { align-items: center; border-bottom: 1px solid #F0F0F0; display: flex; font-size: .9rem; padding: 12px 0; }
 
 .mypage-profile-row:last-child { border-bottom: none; }
-.mypage-label { font-weight: 600; color: #718096; min-width: 120px; }
+
+.mypage-label { color: #718096; font-weight: 600; min-width: 120px; }
 
 .mypage-label { color: #718096; font-weight: 600; min-width: 120px; }
 

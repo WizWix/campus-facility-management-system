@@ -10,10 +10,10 @@ import java.util.List;
 public interface CafeteriaMealItemRepository extends JpaRepository<CafeteriaMealItem, Long> {
   void deleteByMeal(CafeteriaMeal meal);
 
-  List<CafeteriaMealItem> findByMealIn(List<CafeteriaMeal> meals);
-
   /// Spring Data JPA의 커스텀 derived delete 메서드는
   /// 기본 제공 delete()와 달리 @Transactional이 자동 적용되지 않음
   @Transactional
   void deleteByMeal(CafeteriaMeal meal);
+
+  List<CafeteriaMealItem> findByMealIn(List<CafeteriaMeal> meals);
 }
