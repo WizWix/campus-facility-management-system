@@ -12,17 +12,12 @@
 import {useCallback, useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {useAuth} from '../context/AuthContext.jsx';
-import {fetchClubs} from '../data/api.js';
 
 const TABS = [
   {key: 'clubs', label: '동아리 신청 관리'},
   {key: 'reservations', label: '시설 예약 관리'},
   {key: 'dorms', label: '기숙사 신청 관리'},
 ];
-
-const STATUS_CLUB = {APPROVED: '승인', PENDING: '대기 중', REJECTED: '거부'};
-const STATUS_RESERVATION = {APPROVED: '승인', CANCELLED: '취소', PENDING: '대기 중', REJECTED: '거부'};
-const STATUS_DORM = {APPROVED: '승인', CANCELLED: '취소', PENDING: '대기 중', REJECTED: '거부'};
 
 const STATUS_CLASSES = {
   APPROVED: 'mypage-badge-approved',
@@ -31,16 +26,46 @@ const STATUS_CLASSES = {
   REJECTED: 'mypage-badge-rejected',
 };
 
+const STATUS_MAP = {
+  APPROVED: '승인',
+  PENDING: '대기 중',
+  REJECTED: '거절',
+  CANCELLED: '취소',
+};
+
+// ############ 공통 UI ############
+
+function AdminActionModal({title, children, onClose, onSubmit, submitting}) {
+  return (
+      <div className="modal-bg show" onClick={e => e.target === e.currentTarget && onClose()}>
+        <div className="modal-box">
+          <div className="modal-hd">
+            <button className="modal-close" onClick={onClose}>✕</button>
+            <h3>{title}</h3>
+          </div>
+          <form onSubmit={onSubmit} className="modal-bd">
+            {children}
+            <div className="modal-ft d-flex justify-content-end gap-2 mt-4">
+              <button type="button" className="btn btn-secondary" onClick={onClose}>취소</button>
+              <button type="submit" className="btn btn-primary"
+                      disabled={submitting}>{submitting ? '처리 중...' : '확인'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+  );
+}
+
 export function AdminPage() {
   const {currentUser} = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState('clubs');
 
   useEffect(() => {
-    if (!currentUser) navigate('/');
+    if (!currentUser || currentUser.role !== 'ROLE_ADMIN') navigate('/');
   }, [currentUser, navigate]);
 
-  if (!currentUser) return null;
+  if (!currentUser || currentUser.role !== 'ROLE_ADMIN') return null;
 
   return (
       <div className="mypage-layout">
@@ -61,30 +86,8 @@ export function AdminPage() {
   );
 }
 
-// 동아리 소개 모달
-function DescriptionModal({name, description, onClose}) {
-  return (
-      <div className="modal-bg show" onClick={e => {
-        if (e.target === e.currentTarget) onClose();
-      }}>
-        <div className="modal-box">
-          <div className="modal-hd">
-            <button className="modal-close" onClick={onClose}>✕</button>
-            <h3>{name} 동아리 소개문</h3>
-          </div>
-          <div className="modal-bd">
-            <div className="mb-3">
-              <label className="form-label">소개문</label>
-              <textarea className="form-control" rows={7} value={description} readOnly={true}
-                        style={{background: '#F7FAFC'}}/>
-            </div>
-          </div>
-        </div>
-      </div>
-  );
-}
+// ############ 동아리 탭 ############
 
-// 동아리 신청 처리 모달
 function ClubStatusModal({club, onClose, onRefresh}) {
   const [status, setStatus] = useState('APPROVED');
   const [reason, setReason] = useState('');
@@ -93,16 +96,20 @@ function ClubStatusModal({club, onClose, onRefresh}) {
   async function handleSubmit(e) {
     e.preventDefault();
     setSubmitting(true);
+
     try {
-      const response = await fetch(`/api/admin/clubs/${club.id}/status`, {
+      const resp = await fetch(`/api/admin/clubs/${club.id}/status`, {
         method: 'PATCH',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({status, rejectReason: status === 'REJECTED' ? reason : null}),
       });
 
-      if (!response.ok) throw new Error('처리 중 오류 발생');
+      if (!resp.ok) {
+        // noinspection ExceptionCaughtLocallyJS
+        throw new Error('처리 중 오류 발생');
+      }
 
-      alert('처리가 완료되었습니다.');
+      alert('처리가 완료되었습니다');
       onRefresh();
       onClose();
     } catch (err) {
@@ -113,60 +120,28 @@ function ClubStatusModal({club, onClose, onRefresh}) {
   }
 
   return (
-      <div className="modal-bg show" onClick={e => {
-        if (e.target === e.currentTarget) onClose();
-      }}>
-        <div className="modal-box">
-          <div className="modal-hd">
-            <button className="modal-close" onClick={onClose}>✕</button>
-            <h3>{club.name} (<code>{club.slug}</code>) 동아리 개설 신청 처리</h3>
-          </div>
-          <form onSubmit={handleSubmit} className="modal-bd">
-            <div className="mb-3">
-              <label className="form-label">소개문</label>
-              <textarea className="form-control" rows={7} value={club.description} readOnly={true}
-                        style={{background: '#F7FAFC'}}/>
-            </div>
-            <div className="row mb-3">
-              <div className="col">
-                <label className="form-label">동아리 회장</label>
-                <input className="form-control" value={club.president} readOnly={true} style={{background: '#F7FAFC'}}/>
-              </div>
-              <div className="col">
-                <label className="form-label">신청일</label>
-                <input className="form-control" value={club.createdAt} readOnly={true} style={{background: '#F7FAFC'}}/>
-              </div>
-            </div>
-            <hr/>
-            <div className="mb-3">
-              <label className="form-label d-block">승인 여부</label>
-              <div className="form-check form-check-inline">
-                <input className="form-check-input" type="radio" name="status" id="st_app" value="APPROVED"
-                       checked={status === 'APPROVED'} onChange={e => setStatus(e.target.value)}/>
-                <label className="form-check-label" htmlFor="st_app">{STATUS_CLUB.APPROVED}</label>
-              </div>
-              <div className="form-check form-check-inline">
-                <input className="form-check-input" type="radio" name="status" id="st_rej" value="REJECTED"
-                       checked={status === 'REJECTED'} onChange={e => setStatus(e.target.value)}/>
-                <label className="form-check-label" htmlFor="st_rej">{STATUS_CLUB.REJECTED}</label>
-              </div>
-            </div>
-            {status === 'REJECTED' && (
-                <div className="mb-3">
-                  <label className="form-label">거절 사유</label>
-                  <textarea className="form-control" rows={7} placeholder="(선택) 거절 사유를 입력하세요" value={reason}
-                            onChange={e => setReason(e.target.value)}/>
-                </div>
-            )}
-            <div className="modal-ft d-flex justify-content-end gap-2">
-              <button type="button" className="btn btn-secondary" onClick={onClose}>취소</button>
-              <button type="submit" className="btn btn-primary" disabled={submitting}>
-                {submitting ? '처리 중...' : '확인'}
-              </button>
-            </div>
-          </form>
+      <AdminActionModal title={`${club.name} 신청 처리`} onClose={onClose} onSubmit={handleSubmit} submitting={submitting}>
+        <div className="mb-3">
+          <label className="form-label">소개문</label>
+          <textarea className="form-control" rows={5} value={club.description} readOnly
+                    style={{background: '#F7FAFC'}}/>
         </div>
-      </div>
+        <div className="mb-3">
+          <label className="form-label d-block">결정</label>
+          <div className="btn-group w-100">
+            <input type="radio" className="btn-check" name="st" id="st_app" value="APPROVED"
+                   checked={status === 'APPROVED'} onChange={e => setStatus(e.target.value)}/>
+            <label className="btn btn-outline-success" htmlFor="st_app">승인</label>
+            <input type="radio" className="btn-check" name="st" id="st_rej" value="REJECTED"
+                   checked={status === 'REJECTED'} onChange={e => setStatus(e.target.value)}/>
+            <label className="btn btn-outline-danger" htmlFor="st_rej">거절</label>
+          </div>
+        </div>
+        {status === 'REJECTED' && (
+            <textarea className="form-control" placeholder="거절 사유를 입력하세요" value={reason}
+                      onChange={e => setReason(e.target.value)} required/>
+        )}
+      </AdminActionModal>
   );
 }
 
@@ -174,99 +149,252 @@ function ClubStatusModal({club, onClose, onRefresh}) {
 function ClubTab() {
   const [apps, setApps] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedClub, setSelectedClub] = useState(null);
-  const [viewDesc, setViewDesc] = useState(null);
+  const [selected, setSelected] = useState(null);
 
-  const loadData = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchClubs('PENDING');
-      setApps(data);
+      const resp = await fetch('/api/admin/clubs?status=PENDING');
+      setApps(await resp.json());
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadData().then(() => {
-    });
-  }, [loadData]);
+    // noinspection JSIgnoredPromiseFromCall
+    load();
+  }, [load]);
 
   if (loading) return <div className="mypage-loading">데이터를 불러오는 중...</div>;
 
   return (
       <div>
         <div className="mypage-section-header">
-          <h3>동아리 신청 내역</h3>
-          <p className="mypage-section-sub">현재 승인 대기 중인 동아리 신청 현황을 확인할 수 있습니다</p>
+          <h3>동아리 신청 관리</h3>
+          <p className="mypage-section-sub">신규 동아리 개설 신청을 심사합니다</p>
         </div>
-        {apps.length === 0 ? (
-            <div className="mypage-empty">현재 승인 대기 중인 동아리가 없습니다.</div>
-        ) : (
-            <>
-              <div className="table-responsive">
-                <table className="table mypage-table">
-                  <thead>
-                  <tr>
-                    <th>동아리 이름</th>
-                    <th>동아리 소개</th>
-                    <th>동아리 식별자</th>
-                    <th>동아리장</th>
-                    <th>상태</th>
-                    <th>신청일</th>
-                    <th></th>
-                  </tr>
-                  </thead>
-                  <tbody>
-                  {apps.map(a => (
-                      <tr key={a.id}>
-                        <td>{a.name}</td>
-                        <td>
-                          <button className="btn btn-primary btn-sm" onClick={() => setViewDesc(a)}>설명 보기</button>
-                        </td>
-                        <td>{a.slug}</td>
-                        <td>{a.president}</td>
-                        <td>
-                        <span
-                            className={`mypage-badge ${STATUS_CLASSES[a.status] || ''}`}>{STATUS_CLUB[a.status] || a.status}</span>
-                        </td>
-                        <td>{a.createdAt?.substring(0, 10)}</td>
-                        <td>
-                          <button className="btn btn-outline-danger btn-sm" onClick={() => setSelectedClub(a)}>처리
-                          </button>
-                        </td>
-                      </tr>
-                  ))}
-                  </tbody>
-                </table>
-              </div>
-              {viewDesc && (
-                  <DescriptionModal
-                      name={viewDesc.name}
-                      description={viewDesc.description}
-                      onClose={() => setViewDesc(null)}
-                  />
-              )}
-              {selectedClub && (
-                  <ClubStatusModal
-                      club={selectedClub}
-                      onClose={() => setSelectedClub(null)}
-                      onRefresh={loadData}
-                  />
-              )}
-            </>
-        )}
+        <table className="table mypage-table">
+          <thead>
+          <tr>
+            <th>동아리명</th>
+            <th>회장</th>
+            <th>식별자(Slug)</th>
+            <th>신청일</th>
+            <th>관리</th>
+          </tr>
+          </thead>
+          <tbody>
+          {apps.map(a => (
+              <tr key={a.id}>
+                <td>{a.name}</td>
+                <td>{a.president || a.presidentName}</td>
+                <td><code>{a.slug}</code></td>
+                <td>{a.createdAt?.split('T')[0]}</td>
+                <td>
+                  <button className="btn btn-sm btn-outline-primary" onClick={() => setSelected(a)}>처리</button>
+                </td>
+              </tr>
+          ))}
+          </tbody>
+          {selected && <ClubStatusModal club={selected} onClose={() => setSelected(null)} onRefresh={load}/>}
+        </table>
       </div>
   );
 }
 
-// 시설 예약 탭
+// ############ 시설 예약 탭 ############
+
+function ReservationStatusModal({res, onClose, onRefresh}) {
+  const [status, setStatus] = useState('APPROVED');
+  const [reason, setReason] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const resp = await fetch(`/api/admin/reservations/${res.id}/status`, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({status, rejectReason: status === 'REJECTED' ? reason : null}),
+      });
+      if (!resp.ok) {
+        // noinspection ExceptionCaughtLocallyJS
+        throw new Error('오류 발생');
+      }
+      onRefresh();
+      onClose();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+      <AdminActionModal title="시설 예약 심사" onClose={onClose} onSubmit={handleSubmit} submitting={submitting}>
+        <div className="p-3 mb-3 border rounded bg-light">
+          <strong>장소:</strong> {res.buildingName} {res.roomCode}<br/>
+          <strong>일시:</strong> {res.startTime?.replace('T', ' ')} ~ {res.endTime?.split('T')[1]}<br/>
+          <strong>목적:</strong> {res.purpose}
+        </div>
+        <div className="mb-3">
+          <label className="form-label d-block">승인 여부</label>
+          <select className="form-select" value={status} onChange={e => setStatus(e.target.value)}>
+            <option value="APPROVED">승인</option>
+            <option value="REJECTED">거절</option>
+          </select>
+        </div>
+        {status === 'REJECTED' && <textarea className="form-control" placeholder="거절 사유" value={reason}
+                                            onChange={e => setReason(e.target.value)} required/>}
+      </AdminActionModal>
+  );
+}
+
 function ReservationTab() {
-  return (<div>bbbbbb</div>);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(null);
+
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/reservations?status=PENDING');
+      setData(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // noinspection JSIgnoredPromiseFromCall
+    load();
+  }, [load]);
+
+  return (
+      <div>
+        <div className="mypage-section-header">
+          <h3>시설 예약 관리</h3>
+          <p>시설 대관 신청 목록입니다.</p>
+        </div>
+        {loading ? <div className="mypage-loading">데이터를 불러오는 중...</div> : <table className="table mypage-table">
+          <thead>
+          <tr>
+            <th>장소</th>
+            <th>예약자</th>
+            <th>일시</th>
+            <th>상태</th>
+            <th>관리</th>
+          </tr>
+          </thead>
+          <tbody>
+          {data.map(r => (
+              <tr key={r.id}>
+                <td>{r.buildingName} {r.roomCode}</td>
+                <td>{r.userName} {r.clubName && <small className="text-muted">({r.clubName})</small>}</td>
+                <td>{r.startTime?.substring(5, 16).replace('T', ' ')}</td>
+                <td><span className={`mypage-badge ${STATUS_CLASSES[r.status]}`}>{STATUS_MAP[r.status]}</span></td>
+                <td>
+                  <button className="btn btn-sm btn-outline-primary" onClick={() => setSelected(r)}>처리</button>
+                </td>
+              </tr>
+          ))}
+          </tbody>
+        </table>}
+        {selected && <ReservationStatusModal res={selected} onClose={() => setSelected(null)} onRefresh={load}/>}
+      </div>
+  );
 }
 
-// 기숙사 탭
+// ############ 기숙사 탭 ############
+
+function DormStatusModal({app, onClose, onRefresh}) {
+  const [status, setStatus] = useState('APPROVED');
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await fetch(`/api/admin/dorms/${app.id}/status`, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({status}),
+      });
+      onRefresh();
+      onClose();
+    } catch {
+      alert('실패');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+      <AdminActionModal title="기숙사 신청 심사" onClose={onClose} onSubmit={handleSubmit} submitting={submitting}>
+        <div className="mb-3">
+          <p><strong>신청자:</strong> {app.userName || '학부생'}</p>
+          <p><strong>호실:</strong> {app.roomNumber} ({app.period})</p>
+        </div>
+        <select className="form-select" value={status} onChange={e => setStatus(e.target.value)}>
+          <option value="APPROVED">승인</option>
+          <option value="REJECTED">거절</option>
+        </select>
+      </AdminActionModal>
+  );
+}
+
 function DormTab() {
-  return (<div>cccccc</div>);
-}
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(null);
 
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/dorms?status=PENDING');
+      setData(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return (
+      <div>
+        <div className="mypage-section-header">
+          <h3>기숙사 신청 관리</h3>
+          <p>기숙사 입주 신청을 관리합니다.</p>
+        </div>
+        {loading ? <div className="mypage-loading">데이터를 불러오는 중...</div> : <table className="table mypage-table">
+          <thead>
+          <tr>
+            <th>호실</th>
+            <th>기간</th>
+            <th>룸메이트</th>
+            <th>신청일</th>
+            <th>관리</th>
+          </tr>
+          </thead>
+          <tbody>
+          {data.map(d => (
+              <tr key={d.id}>
+                <td>{d.roomNumber}</td>
+                <td>{d.semester} ({d.period})</td>
+                <td>{d.partnerName || '없음'}</td>
+                <td>{d.createdAt?.split('T')[0]}</td>
+                <td>
+                  <button className="btn btn-sm btn-outline-primary" onClick={() => setSelected(d)}>처리</button>
+                </td>
+              </tr>
+          ))}
+          </tbody>
+        </table>}
+        {selected && <DormStatusModal app={selected} onClose={() => setSelected(null)} onRefresh={load}/>}
+      </div>
+  );
+}
