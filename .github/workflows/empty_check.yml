@@ -1,0 +1,8 @@
+name: Empty Check
+on:
+  pull_request:
+jobs:
+  rebase-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "I'm doing nothing!"
