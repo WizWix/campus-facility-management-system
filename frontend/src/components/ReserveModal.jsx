@@ -6,15 +6,16 @@ const ROLE_LABELS = {
   ROLE_STUDENT: '학생', ROLE_PROFESSOR: '교수', ROLE_ADMIN: '관리자',
 };
 
-export function ReserveModal({buildingName, room, selectedDay, startHour, onClose, onReserved}) {
+export function ReserveModal({buildingName, room, selectedDate, startHour, onClose, onReserved}) {
   const {currentUser} = useAuth();
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
+  const y = selectedDate.getFullYear();
+  const m = selectedDate.getMonth();
+  const d = selectedDate.getDate();
+  const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
   const [start, setStart] = useState(startHour);
-  const [end, setEnd] = useState(startHour + 1);
+  const [end, setEnd] = useState(Math.min(startHour + 1, 22));
+  const maxEnd = Math.min(start + 3, 22); // 최대 3시간
   const [purpose, setPurpose] = useState('');
   const [error, setError] = useState(false);
 
@@ -55,7 +56,7 @@ export function ReserveModal({buildingName, room, selectedDay, startHour, onClos
       <div className="modal-hd">
         <button className="modal-close" onClick={onClose}>✕</button>
         <h3>시설 예약 신청</h3>
-        <div className="modal-sub">{buildingName} · {room.name} · {y}년 {m + 1}월 {selectedDay}일</div>
+        <div className="modal-sub">{buildingName} · {room.name} · {y}년 {m + 1}월 {d}일</div>
       </div>
       <div className="modal-bd">
         <div className="mb-3">
@@ -82,7 +83,7 @@ export function ReserveModal({buildingName, room, selectedDay, startHour, onClos
               setEnd(Number(e.target.value));
               setError(false);
             }}>
-              {Array.from({length: 13}, (_, i) => i + 10).map(h => (
+              {Array.from({length: 3}, (_, i) => start + i + 1).filter(h => h <= 22).map(h => (
                   <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>))}
             </select>
           </div>

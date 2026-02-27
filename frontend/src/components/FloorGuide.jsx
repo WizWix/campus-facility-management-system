@@ -26,7 +26,7 @@ export function FloorGuide({buildingData, onRoomClick}) {
         const fd = buildingData.floors[f];
         return (<div key={f} className={`floor-item${f === activeFloor ? ' active' : ''}`}
                      onClick={() => setActiveFloor(f)}>
-          <div className="floor-num">{f}F</div>
+          <div className="floor-num">{f === 0 ? '야외' : `${f}F`}</div>
           <div>
             <div style={{fontWeight: 500, fontSize: '0.9rem'}}>{fd.desc}</div>
             <div className="floor-desc">호실 {fd.rooms.length}개</div>
@@ -38,7 +38,7 @@ export function FloorGuide({buildingData, onRoomClick}) {
     <div className="floor-detail">
       <div className="d-flex justify-content-between align-items-end">
         <div className="floor-detail-header flex-grow-1">
-          <h3>{activeFloor}F</h3>
+          <h3>{activeFloor === 0 ? '야외' : `${activeFloor}F`}</h3>
           <div className="floor-subtitle">{buildingData.name} · {floorData.desc}</div>
         </div>
       </div>

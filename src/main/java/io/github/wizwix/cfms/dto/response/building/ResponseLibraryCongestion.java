@@ -8,7 +8,7 @@ import java.util.Map;
 
 @Getter
 @AllArgsConstructor
-public class LibraryCongestionResponse {
+public class ResponseLibraryCongestion {
   /** 층별 혼잡도 [{name, rate, capacity}] */
   private List<Map<String, Object>> floors;
   /** 시간대별 추이 [{hour, rate}] */

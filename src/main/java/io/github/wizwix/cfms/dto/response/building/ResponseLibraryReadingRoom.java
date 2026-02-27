@@ -8,7 +8,7 @@ import java.util.Map;
 
 @Getter
 @AllArgsConstructor
-public class LibraryReadingRoomResponse {
+public class ResponseLibraryReadingRoom {
   private Long id;
   private String name;
   private String floor;

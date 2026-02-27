@@ -86,7 +86,7 @@ public class UserService implements IUserService {
   @Override
   public void register(RequestRegister request) {
     if (userRepository.findByNumber(request.userNumber()).isPresent())
-      throw new IllegalArgumentException("User already exists");
+      throw new IllegalArgumentException("이미 존재하는 학번/교번입니다.");
 
     User user = new User();
     user.setNumber(request.userNumber());

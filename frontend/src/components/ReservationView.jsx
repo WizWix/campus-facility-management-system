@@ -7,19 +7,24 @@ import {useEffect, useState} from 'react';
 import {useAuth} from '../context/AuthContext.jsx';
 import {fetchRoomReservations} from '../data/api.js';
 import {AuthModal} from './AuthModal.jsx';
-import {MiniCalendar} from './MiniCalendar.jsx';
 import {ReserveModal} from './ReserveModal.jsx';
-
-const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 export function ReservationView({buildingKey, buildingData, jumpToRoom}) {
   const {currentUser} = useAuth();
   const now = new Date();
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [selectedDay, setSelectedDay] = useState(now.getDate());
+  const [selectedDate, setSelectedDate] = useState(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
   const [reservations, setReservations] = useState([]);
   const [modalInfo, setModalInfo] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
+
+  // 주간 날짜 목록 (오늘 ~ 6일 후)
+  const weekDates = Array.from({length: 7}, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+    return d;
+  });
+  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+  const selectedDay = selectedDate.getDate();
 
   const floorKeys = Object.keys(buildingData.floors).map(Number).sort((a, b) => a - b);
 
@@ -39,14 +44,14 @@ export function ReservationView({buildingKey, buildingData, jumpToRoom}) {
   useEffect(() => {
     if (!selectedRoom) return;
     loadReservations();
-  }, [selectedRoom, selectedDay]);
+  }, [selectedRoom, selectedDate]);
 
   function loadReservations() {
     if (!selectedRoom) return;
-    const y = now.getFullYear();
-    const m = now.getMonth();
-    const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
-    // GET /api/reservations?roomId={id}&date={date} → 공개 API (비로그인 가능)
+    const y = selectedDate.getFullYear();
+    const m = selectedDate.getMonth();
+    const d = selectedDate.getDate();
+    const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     fetchRoomReservations(selectedRoom.id, dateStr).then(data => {
       // API 응답(ResponseReservation)을 타임라인 UI가 사용하는 형식으로 변환
       //   API: { startTime: "2026-02-25T09:00:00", endTime: "...", purpose, userName, status, ... }
@@ -66,18 +71,9 @@ export function ReservationView({buildingKey, buildingData, jumpToRoom}) {
     }).catch(() => setReservations([]));
   }
 
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-  const selDate = new Date(y, m, selectedDay);
-
   function handleEmptySlotClick(h) {
     if (!currentUser) {
       setShowAuth(true);
-      return;
-    }
-    if (currentUser.role === 'ROLE_STUDENT') {
-      alert('학생은 직접 시설 예약이 불가합니다.\n교수 또는 관리자만 예약할 수 있습니다.');
       return;
     }
     setModalInfo({room: selectedRoom, startHour: h});
@@ -92,14 +88,14 @@ export function ReservationView({buildingKey, buildingData, jumpToRoom}) {
       {floorKeys.map(f => {
         const fd = buildingData.floors[f];
         return (<div key={f} className="rv-floor-group">
-          <div className="rv-floor-label">{f}F · {fd.desc}</div>
+          <div className="rv-floor-label">{f === 0 ? '야외' : `${f}F`} · {fd.desc}</div>
           {fd.rooms.map(room => (<div
               key={room.id}
               className={`rv-room-item${selectedRoom?.id === room.id ? ' active' : ''}`}
               data-room-id={room.id}
               onClick={() => {
                 setSelectedRoom(room);
-                setSelectedDay(now.getDate());
+                setSelectedDate(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
               }}
           >
             <div className="rv-dot room-status-dot available"/>
@@ -111,37 +107,53 @@ export function ReservationView({buildingKey, buildingData, jumpToRoom}) {
     <div className="rv-main">
       <div className="rv-content">
         <div className="rv-calendar-side">
-          <div className="rv-mini-cal">
-            <div className="cal-header">
-              <span className="cal-month-num">{String(m + 1).padStart(2, '0')}</span>
-              <div>
-                <div className="cal-month-name">{MONTH_NAMES[m]}</div>
-                <div className="cal-year">{y}</div>
-              </div>
-            </div>
-            <MiniCalendar buildingKey={buildingKey} roomId={selectedRoom?.id} selectedDay={selectedDay}
-                          onDayClick={d => setSelectedDay(d)}/>
-            <div className="cal-legend">
-              <div className="cal-legend-item">
-                <div className="cal-legend-dot full"/>
-                마감
-              </div>
-              <div className="cal-legend-item">
-                <div className="cal-legend-dot partial"/>
-                일부
-              </div>
-              <div className="cal-legend-item">
-                <div className="cal-legend-dot empty"/>
-                가능
-              </div>
+          <div style={{marginBottom: '1rem'}}>
+            <div style={{fontWeight: 600, fontSize: '0.95rem', marginBottom: '0.8rem', color: '#2D3748'}}>날짜 선택</div>
+            <div style={{display: 'flex', flexDirection: 'column', gap: '4px'}}>
+              {weekDates.map(d => {
+                const isToday = d.getDate() === now.getDate() && d.getMonth() === now.getMonth();
+                const isSelected = d.getTime() === selectedDate.getTime();
+                const isSun = d.getDay() === 0;
+                const isSat = d.getDay() === 6;
+                return (<div key={d.getTime()}
+                             onClick={() => setSelectedDate(d)}
+                             style={{
+                               display: 'flex', alignItems: 'center', gap: '10px',
+                               padding: '8px 12px', borderRadius: '8px', cursor: 'pointer',
+                               background: isSelected ? '#3182ce' : 'transparent',
+                               color: isSelected ? '#fff' : isSun ? '#e53e3e' : isSat ? '#3182ce' : '#2D3748',
+                               fontWeight: isSelected || isToday ? 600 : 400,
+                               fontSize: '0.88rem',
+                               transition: 'background 0.15s',
+                             }}>
+                  <span style={{width: '24px', textAlign: 'center'}}>{dayNames[d.getDay()]}</span>
+                  <span>{d.getMonth() + 1}/{d.getDate()}</span>
+                  {isToday && <span style={{
+                    fontSize: '0.7rem',
+                    padding: '1px 6px',
+                    borderRadius: '8px',
+                    background: isSelected ? 'rgba(255,255,255,0.25)' : '#EBF8FF',
+                    color: isSelected ? '#fff' : '#3182ce',
+                  }}>오늘</span>}
+                </div>);
+              })}
             </div>
           </div>
           <hr className="my-3"/>
           <div style={{fontSize: '0.82rem', color: '#718096'}}>
-            <div className="mb-2"><strong style={{color: '#2D3748'}}>범례</strong></div>
+            <div className="mb-2"><strong style={{color: '#2D3748'}}>안내</strong></div>
+            <ul style={{paddingLeft: '1rem', margin: 0, lineHeight: '1.8'}}>
+              <li>1시간 단위 예약</li>
+              <li>최대 3시간 연속 예약</li>
+              <li>오늘부터 7일간 예약 가능</li>
+            </ul>
+            <hr className="my-2"/>
             <div className="d-flex align-items-center gap-2 mb-1">
               <div style={{
-                width: 20, height: 12, background: 'linear-gradient(135deg,#2c5282,#3182ce)', borderRadius: 3,
+                width: 20,
+                height: 12,
+                background: 'linear-gradient(135deg,#2c5282,#3182ce)',
+                borderRadius: 3,
               }}/>
               <span>승인된 예약</span>
             </div>
@@ -155,9 +167,8 @@ export function ReservationView({buildingKey, buildingData, jumpToRoom}) {
               <span>승인 대기</span>
             </div>
             <div className="d-flex align-items-center gap-2">
-              <div style={{
-                width: 20, height: 12, background: '#F7FAFC', border: '1px solid #e2e8f0', borderRadius: 3,
-              }}/>
+              <div
+                  style={{width: 20, height: 12, background: '#F7FAFC', border: '1px solid #e2e8f0', borderRadius: 3}}/>
               <span>예약 가능 (클릭)</span>
             </div>
           </div>
@@ -173,7 +184,10 @@ export function ReservationView({buildingKey, buildingData, jumpToRoom}) {
               <h4>{selectedRoom.name} <span
                   style={{fontWeight: 400, fontSize: '0.9rem', color: '#718096'}}>· {buildingData.name}</span>
               </h4>
-              <div className="rv-date-sub">{y}년 {m + 1}월 {selectedDay}일 ({dayNames[selDate.getDay()]})</div>
+              <div
+                  className="rv-date-sub">{selectedDate.getFullYear()}년 {selectedDate.getMonth() + 1}월 {selectedDate.getDate()}일
+                ({dayNames[selectedDate.getDay()]})
+              </div>
             </div>
             <div className="timeline">
               {Array.from({length: 13}, (_, i) => i + 9).map(h => {
@@ -202,7 +216,7 @@ export function ReservationView({buildingKey, buildingData, jumpToRoom}) {
     {modalInfo && (<ReserveModal
         buildingName={buildingData.name}
         room={modalInfo.room}
-        selectedDay={selectedDay}
+        selectedDate={selectedDate}
         startHour={modalInfo.startHour}
         onClose={() => setModalInfo(null)}
         onReserved={handleReserved}

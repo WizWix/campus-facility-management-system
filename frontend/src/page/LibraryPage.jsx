@@ -831,7 +831,8 @@ function CongestionSection({buildingId}) {
             {congestionLabel(data.overallRate)}
           </span>
           </div>
-          {[...data.floors].sort((a, b) => b.rate - a.rate).map(f => (
+          {/* 층 목록: 서버에서 4F→3F→2F→1F→B1 순서로 내려오므로 프론트 재정렬 불필요 */}
+          {data.floors.map(f => (
               <div key={f.name} className="floor-item" style={{cursor: 'default'}}>
                 <div style={{flex: 1}}>
                   <div style={{fontWeight: 500, fontSize: '.85rem'}}>{f.name}</div>
@@ -1027,7 +1028,9 @@ export function LibraryPage({building}) {
     });
   }, []);
 
-  // 상단 "현재 이용 현황" — 실제 API 데이터 로드
+  // 상단 "현재 이용 현황" 5줄 — 실제 API 데이터 기반
+  // 열람실 4개(디지털/제2/제1/야간) + 스터디룸 가용 수를 한눈에 표시
+  // name 기반 조회: DB ID 순서 변동에 안전 (DevLoader 시딩 순서 무관)
   useEffect(() => {
     if (!buildingId) return;
     (async () => {
@@ -1036,12 +1039,21 @@ export function LibraryPage({building}) {
           fetchReadingRooms(buildingId),
           fetchStudyRooms(buildingId),
         ]);
-        const room1 = rooms.find(r => r.id === 1);
-        const room4 = rooms.find(r => r.id === 4);
-        const r1Rate = room1 ? Math.round((room1.usedSeats / room1.totalSeats) * 100) : 0;
-        const r4Rate = room4 ? Math.round((room4.usedSeats / room4.totalSeats) * 100) : 0;
+        // ReadingSection의 rate 계산과 완전 동일: Math.min(round(usedSeats/totalSeats*100), 100)
+        const calcRate = r => r ? Math.min(Math.round((r.usedSeats / r.totalSeats) * 100), 100) : 0;
+        const room1 = rooms.find(r => r.name === '제1열람실');
+        const room2 = rooms.find(r => r.name === '제2열람실');
+        const room4 = rooms.find(r => r.name === '디지털열람실');
+        const roomB1 = rooms.find(r => r.name === '야간열람실');
         const availStudy = studyRooms.filter(r => r.status === 'AVAILABLE').length;
-        setSummaryData({r1Rate, r4Rate, availStudy, totalStudy: studyRooms.length});
+        setSummaryData({
+          r1Rate: calcRate(room1),
+          r2Rate: calcRate(room2),
+          r4Rate: calcRate(room4),
+          rB1Rate: calcRate(roomB1),
+          availStudy,
+          totalStudy: studyRooms.length,
+        });
       } catch { /* 실패해도 무시 — 하드코딩 fallback */
       }
     })();
@@ -1124,11 +1136,25 @@ export function LibraryPage({building}) {
                   <div className="caf-today-summary">
                     <div className="caf-summary-title">현재 이용 현황</div>
                     {[
-                      {icon: '📚', label: '제1열람실', value: summaryData ? `${summaryData.r1Rate}% 사용 중` : '로딩 중...'},
                       {
                         icon: '💻',
                         label: '디지털열람실',
-                        value: summaryData ? `${summaryData.r4Rate}%${summaryData.r4Rate >= 80 ? ' 혼잡' : ' 사용 중'}` : '로딩 중...',
+                        value: summaryData ? `${summaryData.r4Rate}% ${congestionLabel(summaryData.r4Rate)}` : '로딩 중...',
+                      },
+                      {
+                        icon: '📚',
+                        label: '제2열람실',
+                        value: summaryData ? `${summaryData.r2Rate}% ${congestionLabel(summaryData.r2Rate)}` : '로딩 중...',
+                      },
+                      {
+                        icon: '📚',
+                        label: '제1열람실',
+                        value: summaryData ? `${summaryData.r1Rate}% ${congestionLabel(summaryData.r1Rate)}` : '로딩 중...',
+                      },
+                      {
+                        icon: '🌙',
+                        label: '야간열람실',
+                        value: summaryData ? `${summaryData.rB1Rate}% ${congestionLabel(summaryData.rB1Rate)}` : '로딩 중...',
                       },
                       {
                         icon: '🚪',

@@ -24,6 +24,8 @@ import java.util.List;
 /// - cancelReservation: PENDING 상태 + 본인 예약만 취소 가능
 /// - getRoomReservations: 타임라인 UI용 (공개) — PENDING/APPROVED만 표시
 /// - getMyReservations: 마이페이지용 (인증) — REJECTED도 포함하여 사용자에게 결과 알림
+/// - getReservationsByStatus: 관리자용 — 상태별 전체 예약 조회
+/// - updateReservationStatus: 관리자용 — 예약 승인/거절 (PENDING만 처리 가능)
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -98,6 +100,16 @@ public class ReservationService implements IReservationService {
         .toList();
   }
 
+  /// 관리자용 — 상태별 전체 예약 조회
+  /// AdminPage.jsx → ReservationTab에서 PENDING 목록을 가져올 때 사용
+  @Override
+  @Transactional(readOnly = true)
+  public List<ResponseReservation> getReservationsByStatus(ReservationStatus status) {
+    return reservationRepo.findByStatus(status).stream()
+        .map(this::toResponse)
+        .toList();
+  }
+
   @Override
   @Transactional(readOnly = true)
   public List<ResponseReservation> getRoomReservations(Long roomId, LocalDate date) {
@@ -106,6 +118,33 @@ public class ReservationService implements IReservationService {
     return reservationRepo.findByRoomIdAndStartTimeBetweenAndStatusIn(roomId, dayStart, dayEnd, ACTIVE_STATUSES).stream()
         .map(this::toResponse)
         .toList();
+  }
+
+  /// 관리자용 — 예약 승인/거절 처리
+  /// 흐름: AdminPage.jsx → ReservationStatusModal → PATCH /api/admin/reservations/{id}/status
+  ///
+  /// 처리 로직:
+  ///   1. PENDING 상태가 아니면 거부 (이미 처리된 예약 재처리 방지)
+  ///   2. 승인(APPROVED): rejectReason = null
+  ///      거절(REJECTED): rejectReason = 관리자가 입력한 사유 저장
+  ///   3. processedBy = 처리한 관리자 (Reservation 엔티티에 이미 존재하는 필드)
+  ///
+  /// 거절 사유 확인 경로: 학생 마이페이지 → 강의실 예약 탭 → REJECTED 상태 옆에 표시
+  ///   (별도 알림 시스템 없이, ResponseReservation.rejectReason 필드로 전달)
+  @Override
+  public void updateReservationStatus(Long id, ReservationStatus status, String rejectReason, String adminNumber) {
+    Reservation reservation = reservationRepo.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+    if (reservation.getStatus() != ReservationStatus.PENDING) {
+      throw new IllegalStateException("승인 대기 중인 예약만 처리할 수 있습니다.");
+    }
+    User admin = userRepo.findByNumber(adminNumber)
+        .orElseThrow(() -> new IllegalArgumentException("관리자를 찾을 수 없습니다."));
+    reservation.setStatus(status);
+    reservation.setRejectReason(status == ReservationStatus.REJECTED ? rejectReason : null);
+    reservation.setProcessedBy(admin);
+    reservation.setUpdatedAt(LocalDateTime.now());
+    reservationRepo.save(reservation);
   }
 
   private ResponseReservation toResponse(Reservation r) {

@@ -25,6 +25,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
   List<Reservation> findByRoomIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusIn(
       Long roomId, LocalDateTime endTime, LocalDateTime startTime, List<ReservationStatus> statuses);
 
+  /// 상태별 예약 조회 — 관리자 예약 관리 화면에서 사용
+  List<Reservation> findByStatus(ReservationStatus status);
+
   /// 내 예약 조회 — User 엔티티의 number 필드(학번/교번) 기준
   /// JPA가 Reservation → User 관계를 자동 조인하여 user.number = ? 로 변환
   List<Reservation> findByUserNumberAndStatusIn(String number, List<ReservationStatus> statuses);

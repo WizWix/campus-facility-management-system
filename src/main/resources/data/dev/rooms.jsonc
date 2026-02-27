@@ -327,28 +327,22 @@
     "name": "204호",
     "type": "LAB"
   },
-  // 체육관
+  // 체육관 — 야외
   {
     "building": "gym",
     "capacity": 200,
-    "floor": 1,
+    "floor": 0,
     "name": "축구장",
-    "type": "COURT"
+    "type": "OUTDOOR"
   },
   {
     "building": "gym",
-    "capacity": 80,
-    "floor": 1,
-    "name": "농구장",
-    "type": "COURT"
+    "capacity": 100,
+    "floor": 0,
+    "name": "트랙",
+    "type": "OUTDOOR"
   },
-  {
-    "building": "gym",
-    "capacity": 40,
-    "floor": 1,
-    "name": "배드민턴장",
-    "type": "RACQUET"
-  },
+  // 체육관 — 1층
   {
     "building": "gym",
     "capacity": 50,
@@ -358,9 +352,60 @@
   },
   {
     "building": "gym",
-    "capacity": 200,
+    "capacity": 40,
     "floor": 1,
     "name": "탁구장",
     "type": "RACQUET"
+  },
+  {
+    "building": "gym",
+    "capacity": 40,
+    "floor": 1,
+    "name": "배드민턴장",
+    "type": "RACQUET"
+  },
+  // 체육관 — 2층
+  {
+    "building": "gym",
+    "capacity": 80,
+    "floor": 2,
+    "name": "농구장",
+    "type": "COURT"
+  },
+  {
+    "building": "gym",
+    "capacity": 30,
+    "floor": 2,
+    "name": "스쿼시장",
+    "type": "RACQUET"
+  },
+  {
+    "building": "gym",
+    "capacity": 40,
+    "floor": 2,
+    "name": "GX룸",
+    "type": "GYM"
+  },
+  // 체육관 — 3층
+  {
+    "building": "gym",
+    "capacity": 60,
+    "floor": 3,
+    "name": "수영장",
+    "type": "POOL"
+  },
+  {
+    "building": "gym",
+    "capacity": 30,
+    "floor": 3,
+    "name": "요가실",
+    "type": "GYM"
+  },
+  {
+    "building": "gym",
+    "capacity": 20,
+    "floor": 3,
+    "name": "체력측정실",
+    "type": "GYM"
   }
 ]

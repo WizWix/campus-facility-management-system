@@ -14,6 +14,10 @@ public enum RoomType {
   GYM,
   /// 실습실
   LAB,
+  /// 야외 시설
+  OUTDOOR,
+  /// 수영장
+  POOL,
   /// 라켓 스포츠실
   RACQUET,
   /// 세미나실

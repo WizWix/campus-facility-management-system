@@ -1,10 +1,10 @@
 package io.github.wizwix.cfms.controller;
 
-import io.github.wizwix.cfms.dto.response.building.LibraryBookResponse;
-import io.github.wizwix.cfms.dto.response.building.LibraryCongestionResponse;
-import io.github.wizwix.cfms.dto.response.building.LibraryNoticeResponse;
-import io.github.wizwix.cfms.dto.response.building.LibraryReadingRoomResponse;
-import io.github.wizwix.cfms.dto.response.building.LibraryStudyRoomResponse;
+import io.github.wizwix.cfms.dto.response.building.ResponseLibraryBook;
+import io.github.wizwix.cfms.dto.response.building.ResponseLibraryCongestion;
+import io.github.wizwix.cfms.dto.response.building.ResponseLibraryNotice;
+import io.github.wizwix.cfms.dto.response.building.ResponseLibraryReadingRoom;
+import io.github.wizwix.cfms.dto.response.building.ResponseLibraryStudyRoom;
 import io.github.wizwix.cfms.service.iface.ILibraryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,13 +33,13 @@ public class LibraryApiController {
 
   // ── 4. 혼잡도 ──
   @GetMapping("/congestion")
-  public ResponseEntity<LibraryCongestionResponse> getCongestion(
+  public ResponseEntity<ResponseLibraryCongestion> getCongestion(
       @PathVariable Long buildingId) {
     return ResponseEntity.ok(libraryService.getCongestion(buildingId));
   }
 
   @GetMapping("/notices/{noticeId}")
-  public ResponseEntity<LibraryNoticeResponse> getNotice(
+  public ResponseEntity<ResponseLibraryNotice> getNotice(
       @PathVariable Long buildingId,
       @PathVariable Long noticeId) {
     return ResponseEntity.ok(libraryService.getNotice(buildingId, noticeId));
@@ -47,13 +47,13 @@ public class LibraryApiController {
 
   // ── 5. 공지사항 ──
   @GetMapping("/notices")
-  public ResponseEntity<List<LibraryNoticeResponse>> getNotices(
+  public ResponseEntity<List<ResponseLibraryNotice>> getNotices(
       @PathVariable Long buildingId) {
     return ResponseEntity.ok(libraryService.getNotices(buildingId));
   }
 
   @GetMapping("/reading-rooms/{roomId}/seats")
-  public ResponseEntity<LibraryReadingRoomResponse> getReadingRoomSeats(
+  public ResponseEntity<ResponseLibraryReadingRoom> getReadingRoomSeats(
       @PathVariable Long buildingId,
       @PathVariable Long roomId) {
     return ResponseEntity.ok(libraryService.getReadingRoomSeats(buildingId, roomId));
@@ -61,13 +61,13 @@ public class LibraryApiController {
 
   // ── 1. 열람실 ──
   @GetMapping("/reading-rooms")
-  public ResponseEntity<List<LibraryReadingRoomResponse>> getReadingRooms(
+  public ResponseEntity<List<ResponseLibraryReadingRoom>> getReadingRooms(
       @PathVariable Long buildingId) {
     return ResponseEntity.ok(libraryService.getReadingRooms(buildingId));
   }
 
   @GetMapping("/study-rooms/{roomId}/slots")
-  public ResponseEntity<LibraryStudyRoomResponse> getStudyRoomSlots(
+  public ResponseEntity<ResponseLibraryStudyRoom> getStudyRoomSlots(
       @PathVariable Long buildingId,
       @PathVariable Long roomId,
       @RequestParam String date) {
@@ -76,9 +76,27 @@ public class LibraryApiController {
 
   // ── 3. 스터디룸 ──
   @GetMapping("/study-rooms")
-  public ResponseEntity<List<LibraryStudyRoomResponse>> getStudyRooms(
+  public ResponseEntity<List<ResponseLibraryStudyRoom>> getStudyRooms(
       @PathVariable Long buildingId) {
     return ResponseEntity.ok(libraryService.getStudyRooms(buildingId));
+  }
+
+  // ── 6. 마이페이지용: 내 예약 조회 (로그인 필수, Authentication에서 학번 추출) ──
+
+  /** 내 열람실 좌석 예약 내역 — 로그인 필수 */
+  @GetMapping("/reading-rooms/reservations/me")
+  public ResponseEntity<List<Map<String, Object>>> mySeatReservations(
+      @PathVariable Long buildingId,
+      Authentication auth) {
+    return ResponseEntity.ok(libraryService.getMySeatReservations(auth.getName()));
+  }
+
+  /** 내 스터디룸 예약 내역 — 로그인 필수 */
+  @GetMapping("/study-rooms/reservations/me")
+  public ResponseEntity<List<Map<String, Object>>> myStudyRoomReservations(
+      @PathVariable Long buildingId,
+      Authentication auth) {
+    return ResponseEntity.ok(libraryService.getMyStudyRoomReservations(auth.getName()));
   }
 
   @PostMapping("/books/{bookId}/reserve")
@@ -88,6 +106,8 @@ public class LibraryApiController {
     libraryService.reserveBook(buildingId, bookId);
     return ResponseEntity.ok().build();
   }
+
+  // ── 예약 처리 (POST) ──
 
   /**
    * 좌석 예약 — 로그인 필수
@@ -125,7 +145,7 @@ public class LibraryApiController {
 
   // ── 2. 도서 검색 ──
   @GetMapping("/books")
-  public ResponseEntity<List<LibraryBookResponse>> searchBooks(
+  public ResponseEntity<List<ResponseLibraryBook>> searchBooks(
       @PathVariable Long buildingId,
       @RequestParam(required = false, defaultValue = "") String q,
       @RequestParam(required = false) String publisher,

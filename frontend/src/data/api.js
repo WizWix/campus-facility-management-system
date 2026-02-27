@@ -75,13 +75,13 @@ export async function loginApi(userNumber, password) {
   return res.json();
 }
 
-/// 회원가입 — 백엔드 RequestRegister DTO: { userNumber, name, password, email }
+/// 회원가입 — 백엔드 RequestRegister DTO: { userNumber, name, password, email, gender }
 /// 응답: 201 Created (body 없음), 가입 후 별도 로그인 필요
-export async function signupApi(userNumber, password, name, email) {
+export async function signupApi(userNumber, password, name, email, gender) {
   const res = await fetch(`${BASE}/auth/register`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({userNumber, name, password, email}),
+    body: JSON.stringify({userNumber, name, password, email, gender}),
   });
   if (!res.ok) throw new Error(await res.text());
 }
@@ -360,5 +360,19 @@ export async function fetchNotices(buildingId) {
 export async function fetchNotice(buildingId, noticeId) {
   const res = await fetch(`${BASE}/buildings/${buildingId}/library/notices/${noticeId}`);
   if (!res.ok) throw new Error('공지 상세를 불러오지 못했습니다.');
+  return res.json();
+}
+
+/// 내 열람실 좌석 예약 내역 — 로그인 필요
+export async function fetchMySeatReservations(buildingId) {
+  const res = await fetch(`${BASE}/buildings/${buildingId}/library/reading-rooms/reservations/me`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+/// 내 스터디룸 예약 내역 — 로그인 필요
+export async function fetchMyStudyRoomReservations(buildingId) {
+  const res = await fetch(`${BASE}/buildings/${buildingId}/library/study-rooms/reservations/me`);
+  if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
