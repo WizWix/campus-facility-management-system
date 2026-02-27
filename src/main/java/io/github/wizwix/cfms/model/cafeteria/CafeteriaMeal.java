@@ -1,8 +1,9 @@
-package io.github.wizwix.cfms.model.cafeteria;
+package io.github.wizwix.cfms.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import io.github.wizwix.cfms.model.enums.CafeteriaMealType;
+import io.github.wizwix.cfms.model.enums.MealType;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -40,7 +41,8 @@ public class CafeteriaMeal {
   private List<CafeteriaMealItem> items;
   /// 끼니 유형 (BREAKFAST/LUNCH/DINNER)
   @Enumerated(EnumType.STRING)
-  private CafeteriaMealType mealType;
+  @Column(columnDefinition = "varchar(50)")
+  private MealType mealType;
   /// 시간대 (e.g. '08:00 ~ 09:30')
   private String time;
 }
