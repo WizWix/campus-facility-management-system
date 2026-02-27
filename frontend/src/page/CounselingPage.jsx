@@ -7,6 +7,7 @@
 //   GET  /api/counseling/slots?counselorId=&date=  — 예약 현황 (공개)
 //   POST /api/counseling/reservations              — 예약 신청 (인증)
 import {useEffect, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import {useAuth} from '../context/AuthContext.jsx';
 import {createCounselingReservation, fetchCounselingSlots, fetchCounselors} from '../data/api.js';
 
@@ -19,6 +20,7 @@ const DEPARTMENTS = [
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 export function CounselingPage() {
+  const navigate = useNavigate();
   const {currentUser} = useAuth();
   const [dept, setDept] = useState('ACADEMIC');
   const [counselors, setCounselors] = useState([]);
@@ -85,7 +87,10 @@ export function CounselingPage() {
             <div className="breadcrumb-nav">
               <a href="/">캠퍼스 맵</a><span className="sep">/</span><span className="current">행정동 · 상담 예약</span>
             </div>
-            <h2 className="store-name" style={{marginTop: '1rem'}}>행정동 상담 예약</h2>
+            <h2 className="store-name" style={{marginTop: '1rem'}}>
+              행정동 상담 예약
+              <a className="back-link" onClick={() => navigate('/')}>← 캠퍼스 지도로 돌아가기</a>
+            </h2>
             <p style={{color: '#718096', fontSize: '.9rem', marginTop: '.5rem'}}>부서를 선택하고 상담사와 일정을 정하여 예약하세요.</p>
           </div>
         </div>
