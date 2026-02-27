@@ -1,10 +1,10 @@
 package io.github.wizwix.cfms.service;
 
-import io.github.wizwix.cfms.dto.response.building.LibraryBookResponse;
-import io.github.wizwix.cfms.dto.response.building.LibraryCongestionResponse;
-import io.github.wizwix.cfms.dto.response.building.LibraryNoticeResponse;
-import io.github.wizwix.cfms.dto.response.building.LibraryReadingRoomResponse;
-import io.github.wizwix.cfms.dto.response.building.LibraryStudyRoomResponse;
+import io.github.wizwix.cfms.dto.response.building.ResponseLibraryBook;
+import io.github.wizwix.cfms.dto.response.building.ResponseLibraryCongestion;
+import io.github.wizwix.cfms.dto.response.building.ResponseLibraryNotice;
+import io.github.wizwix.cfms.dto.response.building.ResponseLibraryReadingRoom;
+import io.github.wizwix.cfms.dto.response.building.ResponseLibraryStudyRoom;
 import io.github.wizwix.cfms.model.SeatReservation;
 import io.github.wizwix.cfms.model.StudyRoomReservation;
 import io.github.wizwix.cfms.repo.BookRepository;
@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class LibraryServiceImpl implements ILibraryService {
+public class LibraryService implements ILibraryService {
 
   // ── 5. 공지사항 ──
   // TODO: Notice 엔티티 + DevLoader로 전환 (현재 하드코딩 데이터)
@@ -103,16 +104,25 @@ public class LibraryServiceImpl implements ILibraryService {
   // ── 2. 도서 검색 ──
 
   // ── 4. 혼잡도 ──
-  // TODO: 실시간 혼잡도 데이터 연동 (현재 하드코딩 데이터)
+  // 이전: 고정 % 하드코딩 → 현재: buildSeats()로 실시간 OCCUPIED 비율 계산
+  // 열람실 현황 탭(getReadingRooms)과 동일한 로직을 사용해 수치가 항상 일치함
   @Override
-  public LibraryCongestionResponse getCongestion(Long buildingId) {
-    List<Map<String, Object>> floors = List.of(
-        Map.of("name", "1층 로비·안내데스크", "rate", 45, "capacity", 50),
-        Map.of("name", "2층 제1열람실", "rate", 29, "capacity", 128),
-        Map.of("name", "3층 제2열람실", "rate", 44, "capacity", 76),
-        Map.of("name", "4층 디지털열람실", "rate", 92, "capacity", 60),
-        Map.of("name", "B1 야간열람실", "rate", 15, "capacity", 80)
-    );
+  public ResponseLibraryCongestion getCongestion(Long buildingId) {
+    LocalDate today = LocalDate.now();
+    int rate2F = Math.min((int) ((double) buildSeats(1L, today).stream().filter(s -> "OCCUPIED".equals(s.get("status"))).count() / ROOM_SPEC.get(1L)[0] * 100), 100);
+    int rate3F = Math.min((int) ((double) buildSeats(2L, today).stream().filter(s -> "OCCUPIED".equals(s.get("status"))).count() / ROOM_SPEC.get(2L)[0] * 100), 100);
+    int rateB1 = Math.min((int) ((double) buildSeats(3L, today).stream().filter(s -> "OCCUPIED".equals(s.get("status"))).count() / ROOM_SPEC.get(3L)[0] * 100), 100);
+    int rate4F = Math.min((int) ((double) buildSeats(4L, today).stream().filter(s -> "OCCUPIED".equals(s.get("status"))).count() / ROOM_SPEC.get(4L)[0] * 100), 100);
+    int rate1F = 45; // 1층 로비는 별도 센서 없으므로 고정값 유지 (TODO: 센서 연동)
+
+    // 순서 고정: 4층(맨 위) → 3층 → 2층 → 1층 → B1(맨 아래)
+    List<Map<String, Object>> floors = new ArrayList<>(List.of(
+        new LinkedHashMap<>(Map.of("name", "4층 디지털열람실", "rate", rate4F, "capacity", 60)),
+        new LinkedHashMap<>(Map.of("name", "3층 제2열람실", "rate", rate3F, "capacity", 76)),
+        new LinkedHashMap<>(Map.of("name", "2층 제1열람실", "rate", rate2F, "capacity", 128)),
+        new LinkedHashMap<>(Map.of("name", "1층 로비·안내데스크", "rate", rate1F, "capacity", 50)),
+        new LinkedHashMap<>(Map.of("name", "B1 야간열람실", "rate", rateB1, "capacity", 80))
+    ));
     List<Map<String, Object>> hourly = List.of(
         Map.of("hour", "08", "rate", 10), Map.of("hour", "09", "rate", 35),
         Map.of("hour", "10", "rate", 58), Map.of("hour", "11", "rate", 72),
@@ -122,53 +132,102 @@ public class LibraryServiceImpl implements ILibraryService {
         Map.of("hour", "18", "rate", 42), Map.of("hour", "19", "rate", 30),
         Map.of("hour", "20", "rate", 20), Map.of("hour", "21", "rate", 15)
     );
-    return new LibraryCongestionResponse(54, floors, hourly);
+    int overallRate = floors.stream().mapToInt(f -> (int) f.get("rate")).sum() / floors.size();
+    // @AllArgsConstructor 필드 순서: floors, hourlyTrend, overallRate
+    return new ResponseLibraryCongestion(floors, hourly, overallRate);
+  }
+
+  // ── 6. 마이페이지용: 내 예약 조회 ──
+  // SeatReservation / StudyRoomReservation 테이블에서 해당 학번의 예약만 필터링
+  // roomName, floor는 하드코딩(ROOM_NAME, STUDY_ROOM_DB)에서 조회 (TODO: 엔티티 전환 후 JOIN)
+
+  @Override
+  public List<Map<String, Object>> getMySeatReservations(String userNumber) {
+    return seatReservationRepository.findAll().stream()
+        .filter(r -> userNumber.equals(r.getUserNumber()))
+        .sorted(Comparator.comparing(SeatReservation::getDate).reversed())
+        .map(r -> {
+          Map<String, Object> m = new LinkedHashMap<>();
+          m.put("id", r.getId());
+          m.put("roomName", ROOM_NAME.getOrDefault(r.getRoomId(), "열람실"));
+          m.put("floor", ROOM_FLOOR.getOrDefault(r.getRoomId(), "?F"));
+          m.put("seatNo", r.getSeatNo());
+          m.put("date", r.getDate().toString());
+          return m;
+        })
+        .toList();
   }
 
   @Override
-  public LibraryNoticeResponse getNotice(Long buildingId, Long noticeId) {
+  public List<Map<String, Object>> getMyStudyRoomReservations(String userNumber) {
+    return studyRoomReservationRepository.findAll().stream()
+        .filter(r -> userNumber.equals(r.getUserNumber()))
+        .sorted(Comparator.comparing(StudyRoomReservation::getDate).reversed())
+        .map(r -> {
+          var room = STUDY_ROOM_DB.stream()
+              .filter(s -> s.get("id").equals(r.getRoomId()))
+              .findFirst();
+          String roomName = room.map(s -> s.get("name").toString()).orElse("스터디룸");
+          String floor = room.map(s -> s.get("floor").toString()).orElse("?F");
+          Map<String, Object> m = new LinkedHashMap<>();
+          m.put("id", r.getId());
+          m.put("roomName", roomName);
+          m.put("floor", floor);
+          m.put("date", r.getDate().toString());
+          m.put("startHour", r.getStartHour());
+          m.put("endHour", r.getStartHour() + 1);
+          return m;
+        })
+        .toList();
+  }
+
+  @Override
+  public ResponseLibraryNotice getNotice(Long buildingId, Long noticeId) {
     return NOTICE_DB.stream()
         .filter(n -> n.get("id").equals(noticeId))
         .findFirst()
-        .map(n -> new LibraryNoticeResponse(
-            (Long) n.get("id"), n.get("type").toString(), n.get("title").toString(),
-            n.get("date").toString(), (int) n.get("views"), n.get("content").toString()
+        // @AllArgsConstructor 필드 순서: id, content, date, title, type, views
+        .map(n -> new ResponseLibraryNotice(
+            (Long) n.get("id"), n.get("content").toString(), n.get("date").toString(),
+            n.get("title").toString(), n.get("type").toString(), (int) n.get("views")
         ))
         .orElseThrow(() -> new RuntimeException("공지를 찾을 수 없습니다: " + noticeId));
   }
 
   @Override
-  public List<LibraryNoticeResponse> getNotices(Long buildingId) {
+  public List<ResponseLibraryNotice> getNotices(Long buildingId) {
     return NOTICE_DB.stream()
-        .map(n -> new LibraryNoticeResponse(
-            (Long) n.get("id"), n.get("type").toString(), n.get("title").toString(),
-            n.get("date").toString(), (int) n.get("views"), null
+        // @AllArgsConstructor 필드 순서: id, content, date, title, type, views
+        .map(n -> new ResponseLibraryNotice(
+            (Long) n.get("id"), null, n.get("date").toString(),
+            n.get("title").toString(), n.get("type").toString(), (int) n.get("views")
         ))
         .toList();
   }
 
   @Override
-  public LibraryReadingRoomResponse getReadingRoomSeats(Long buildingId, Long roomId) {
+  public ResponseLibraryReadingRoom getReadingRoomSeats(Long buildingId, Long roomId) {
     LocalDate today = LocalDate.now();
     List<Map<String, Object>> seats = buildSeats(roomId, today);
 
     int total = ROOM_SPEC.getOrDefault(roomId, new int[]{60, 50})[0];
     int occupied = (int) seats.stream().filter(s -> "OCCUPIED".equals(s.get("status"))).count();
 
-    return new LibraryReadingRoomResponse(
+    // @AllArgsConstructor 필드 순서: id, name, floor, seats, totalSeats, usedSeats
+    return new ResponseLibraryReadingRoom(
         roomId,
         ROOM_NAME.getOrDefault(roomId, "열람실"),
         ROOM_FLOOR.getOrDefault(roomId, "?F"),
+        seats,       // 좌석 배치도 포함
         total,
-        occupied,   // getReadingRooms 와 동일한 값 → 좌측/우측 완전 일치
-        seats       // 좌석 배치도 포함
+        occupied
     );
   }
 
   @Override
-  public List<LibraryReadingRoomResponse> getReadingRooms(Long buildingId) {
+  public List<ResponseLibraryReadingRoom> getReadingRooms(Long buildingId) {
     LocalDate today = LocalDate.now();
-    List<LibraryReadingRoomResponse> result = new ArrayList<>();
+    List<ResponseLibraryReadingRoom> result = new ArrayList<>();
 
     for (long roomId = 1; roomId <= 4; roomId++) {
       // buildSeats 로 정확한 OCCUPIED 수 계산 (좌측 카드와 오른쪽 완전 일치)
@@ -176,70 +235,21 @@ public class LibraryServiceImpl implements ILibraryService {
       int total = ROOM_SPEC.get(roomId)[0];
       int occupied = (int) seats.stream().filter(s -> "OCCUPIED".equals(s.get("status"))).count();
 
-      result.add(new LibraryReadingRoomResponse(
+      // @AllArgsConstructor 필드 순서: id, name, floor, seats, totalSeats, usedSeats
+      result.add(new ResponseLibraryReadingRoom(
           roomId,
           ROOM_NAME.get(roomId),
           ROOM_FLOOR.get(roomId),
+          null,        // 목록 조회 시 seats null
           total,
-          occupied,   // usedSeats = 실제 OCCUPIED 수 (좌측 퍼센트 기준)
-          null        // 목록 조회 시 seats null
+          occupied
       ));
     }
     return result;
   }
 
-  /**
-   * 오늘 날짜 기준으로 한 열람실의 좌석 상태 목록을 생성한다.
-   * <p>
-   * 규칙:
-   * 1. DB에서 예약된(RESERVED) 좌석 번호를 먼저 확정한다.
-   * 2. 나머지 좌석을 날짜+roomId 기반 시드로 셔플한다.
-   * 3. 셔플 결과 앞에서 targetOccupied 개수만큼 OCCUPIED, 나머지 AVAILABLE.
-   * 4. targetOccupied = min(total × rate / 100, total - reserved) — 절대 초과 불가
-   */
-  private List<Map<String, Object>> buildSeats(Long roomId, LocalDate date) {
-    int[] spec = ROOM_SPEC.getOrDefault(roomId, new int[]{60, 50});
-    int total = spec[0];
-    int targetRate = Math.min(spec[1], 100);
-
-    // 1. DB 예약 좌석
-    Set<Integer> reservedNos = seatReservationRepository
-        .findByRoomIdAndDate(roomId, date)
-        .stream()
-        .map(SeatReservation::getSeatNo)
-        .collect(Collectors.toSet());
-
-    int reserved = reservedNos.size();
-    // 2. OCCUPIED 개수 — (total - reserved) 를 절대 초과 불가
-    int targetOccupied = Math.min((int) (total * targetRate / 100.0), total - reserved);
-
-    // 3. 예약 안 된 좌석 목록 셔플 (시드: roomId + 날짜 day-of-year)
-    List<Integer> freeSeats = new ArrayList<>();
-    for (int i = 1; i <= total; i++) {
-      if (!reservedNos.contains(i)) freeSeats.add(i);
-    }
-    long seed = roomId * 10000L + date.getDayOfYear();
-    Collections.shuffle(freeSeats, new Random(seed));
-
-    // 4. 앞 targetOccupied 개 → OCCUPIED, 나머지 → AVAILABLE
-    Set<Integer> occupiedNos = new HashSet<>(
-        freeSeats.subList(0, Math.min(targetOccupied, freeSeats.size()))
-    );
-
-    // 5. 좌석 목록 생성 (1번~total번 순서)
-    List<Map<String, Object>> seats = new ArrayList<>();
-    for (int seatNo = 1; seatNo <= total; seatNo++) {
-      String status;
-      if (reservedNos.contains(seatNo)) status = "RESERVED";
-      else if (occupiedNos.contains(seatNo)) status = "OCCUPIED";
-      else status = "AVAILABLE";
-      seats.add(Map.of("seatNo", seatNo, "status", status));
-    }
-    return seats;
-  }
-
   @Override
-  public LibraryStudyRoomResponse getStudyRoomSlots(Long buildingId, Long roomId, String date) {
+  public ResponseLibraryStudyRoom getStudyRoomSlots(Long buildingId, Long roomId, String date) {
     LocalDate localDate = LocalDate.parse(date);
 
     // DB에서 해당 방의 예약된 시간 조회
@@ -252,21 +262,23 @@ public class LibraryServiceImpl implements ILibraryService {
     return STUDY_ROOM_DB.stream()
         .filter(r -> r.get("id").equals(roomId))
         .findFirst()
-        .map(r -> new LibraryStudyRoomResponse(
-            (Long) r.get("id"), r.get("name").toString(), r.get("floor").toString(),
-            (int) r.get("capacity"), (List<String>) r.get("amenities"),
-            r.get("status").toString(), occupiedSlots
+        // @AllArgsConstructor 필드 순서: id, name, amenities, capacity, floor, occupiedSlots, status
+        .map(r -> new ResponseLibraryStudyRoom(
+            (Long) r.get("id"), r.get("name").toString(), (List<String>) r.get("amenities"),
+            (int) r.get("capacity"), r.get("floor").toString(),
+            occupiedSlots, r.get("status").toString()
         ))
         .orElseThrow(() -> new RuntimeException("스터디룸을 찾을 수 없습니다: " + roomId));
   }
 
   @Override
-  public List<LibraryStudyRoomResponse> getStudyRooms(Long buildingId) {
+  public List<ResponseLibraryStudyRoom> getStudyRooms(Long buildingId) {
     return STUDY_ROOM_DB.stream()
-        .map(r -> new LibraryStudyRoomResponse(
-            (Long) r.get("id"), r.get("name").toString(), r.get("floor").toString(),
-            (int) r.get("capacity"), (List<String>) r.get("amenities"),
-            r.get("status").toString(), null
+        // @AllArgsConstructor 필드 순서: id, name, amenities, capacity, floor, occupiedSlots, status
+        .map(r -> new ResponseLibraryStudyRoom(
+            (Long) r.get("id"), r.get("name").toString(), (List<String>) r.get("amenities"),
+            (int) r.get("capacity"), r.get("floor").toString(),
+            null, r.get("status").toString()
         ))
         .toList();
   }
@@ -332,7 +344,7 @@ public class LibraryServiceImpl implements ILibraryService {
   }
 
   @Override
-  public List<LibraryBookResponse> searchBooks(Long buildingId, String query, String publisher, String category) {
+  public List<ResponseLibraryBook> searchBooks(Long buildingId, String query, String publisher, String category) {
     return bookRepository.findAll().stream()
         .filter(b -> {
           boolean matchQ = query == null || query.isBlank()
@@ -345,12 +357,63 @@ public class LibraryServiceImpl implements ILibraryService {
               || category.equals(b.getCategory());
           return matchQ && matchPub && matchCat;
         })
-        .map(b -> new LibraryBookResponse(
-            b.getId(), b.getTitle(), b.getAuthor(),
-            b.getPublisher(), b.getCategory(),
+        // @AllArgsConstructor 필드 순서: id, author, available, category, location, publisher, title, year
+        .map(b -> new ResponseLibraryBook(
+            b.getId(), b.getAuthor(),
             b.getAvailable() != null && b.getAvailable(),
-            "미지정", 0
+            b.getCategory(), "미지정", b.getPublisher(),
+            b.getTitle(), 0
         ))
         .toList();
+  }
+
+  /**
+   * 오늘 날짜 기준으로 한 열람실의 좌석 상태 목록을 생성한다.
+   * <p>
+   * 규칙:
+   * 1. DB에서 예약된(RESERVED) 좌석 번호를 먼저 확정한다.
+   * 2. 나머지 좌석을 날짜+roomId 기반 시드로 셔플한다.
+   * 3. 셔플 결과 앞에서 targetOccupied 개수만큼 OCCUPIED, 나머지 AVAILABLE.
+   * 4. targetOccupied = min(total × rate / 100, total - reserved) — 절대 초과 불가
+   */
+  private List<Map<String, Object>> buildSeats(Long roomId, LocalDate date) {
+    int[] spec = ROOM_SPEC.getOrDefault(roomId, new int[]{60, 50});
+    int total = spec[0];
+    int targetRate = Math.min(spec[1], 100);
+
+    // 1. DB 예약 좌석
+    Set<Integer> reservedNos = seatReservationRepository
+        .findByRoomIdAndDate(roomId, date)
+        .stream()
+        .map(SeatReservation::getSeatNo)
+        .collect(Collectors.toSet());
+
+    int reserved = reservedNos.size();
+    // 2. OCCUPIED 개수 — (total - reserved) 를 절대 초과 불가
+    int targetOccupied = Math.min((int) (total * targetRate / 100.0), total - reserved);
+
+    // 3. 예약 안 된 좌석 목록 셔플 (시드: roomId + 날짜 day-of-year)
+    List<Integer> freeSeats = new ArrayList<>();
+    for (int i = 1; i <= total; i++) {
+      if (!reservedNos.contains(i)) freeSeats.add(i);
+    }
+    long seed = roomId * 10000L + date.getDayOfYear();
+    Collections.shuffle(freeSeats, new Random(seed));
+
+    // 4. 앞 targetOccupied 개 → OCCUPIED, 나머지 → AVAILABLE
+    Set<Integer> occupiedNos = new HashSet<>(
+        freeSeats.subList(0, Math.min(targetOccupied, freeSeats.size()))
+    );
+
+    // 5. 좌석 목록 생성 (1번~total번 순서)
+    List<Map<String, Object>> seats = new ArrayList<>();
+    for (int seatNo = 1; seatNo <= total; seatNo++) {
+      String status;
+      if (reservedNos.contains(seatNo)) status = "RESERVED";
+      else if (occupiedNos.contains(seatNo)) status = "OCCUPIED";
+      else status = "AVAILABLE";
+      seats.add(Map.of("seatNo", seatNo, "status", status));
+    }
+    return seats;
   }
 }

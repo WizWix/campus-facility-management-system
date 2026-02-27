@@ -43,6 +43,7 @@ public class User {
   private Boolean enabled = true;
   /// 성별
   @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
   private Gender gender;
   /// 학번 or 교번 (e.g. '260004181')
   @Column(unique = true, nullable = false)

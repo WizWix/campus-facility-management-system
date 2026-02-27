@@ -39,8 +39,9 @@ export function DormitoryPage() {
     setLoading(true);
     fetchDormRooms(selectedGender)
         .then(data => {
-          setFloors(data);
-          if (data.length > 0) setSelectedFloor(data[0].floor);
+          const sorted = [...data].sort((a, b) => b.floor - a.floor);
+          setFloors(sorted);
+          if (sorted.length > 0) setSelectedFloor(sorted[0].floor);
         })
         .catch(() => alert('호실 정보를 불러오지 못했습니다.'))
         .finally(() => setLoading(false));

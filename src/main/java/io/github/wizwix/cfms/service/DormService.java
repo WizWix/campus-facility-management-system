@@ -61,7 +61,7 @@ public class DormService implements IDormService {
     User partner = null;
     if (request.partnerNumber() != null && !request.partnerNumber().isBlank()) {
       partner = userRepo.findByNumberAndEnabledTrue(request.partnerNumber())
-          .orElseThrow(() -> new IllegalArgumentException("친구 학번을 찾을 수 없습니다: " + request.partnerNumber()));
+          .orElseThrow(() -> new IllegalArgumentException("같이 신청할 인원의 학번이 존재하지 않습니다."));
       if (partner.getId().equals(currentUser.getId())) {
         throw new IllegalArgumentException("본인의 학번은 입력할 수 없습니다.");
       }

@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
-public class LibraryStudyRoomResponse {
+public class ResponseLibraryStudyRoom {
   private Long id;
   private String name;
   private List<String> amenities;

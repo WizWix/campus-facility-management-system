@@ -10,6 +10,8 @@
 //   DELETE /api/dorms/{id}      — 신청 취소 (DormTab)
 //   GET  /api/reservations/me   — 강의실 예약 내역 (ReservationTab)
 //   DELETE /api/reservations/{id} — 예약 취소 (ReservationTab)
+//   GET  /api/buildings/{id}/library/reading-rooms/reservations/me — 열람실 예약 (SeatReservationTab)
+//   GET  /api/buildings/{id}/library/study-rooms/reservations/me  — 스터디룸 예약 (StudyReservationTab)
 import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {useAuth} from '../context/AuthContext.jsx';
@@ -17,10 +19,13 @@ import {
   cancelCounselingReservation,
   cancelDormApplication,
   cancelReservation,
+  fetchBuildings,
   fetchMyCounselingReservations,
   fetchMyDormApplications,
   fetchMyProfile,
   fetchMyReservations,
+  fetchMySeatReservations,
+  fetchMyStudyRoomReservations,
   updateMyProfile,
 } from '../data/api.js';
 
@@ -29,6 +34,8 @@ const TABS = [
   {key: 'dorm', label: '기숙사 신청'},
   {key: 'reservation', label: '강의실 예약'},
   {key: 'counseling', label: '상담 예약'},
+  {key: 'seatReservation', label: '열람실 예약'},
+  {key: 'studyReservation', label: '스터디룸 예약'},
 ];
 
 const ROLE_LABELS = {ROLE_STUDENT: '학생', ROLE_PROFESSOR: '교수', ROLE_ADMIN: '관리자'};
@@ -68,6 +75,8 @@ export function MyPage() {
           {tab === 'dorm' && <DormTab/>}
           {tab === 'reservation' && <ReservationTab/>}
           {tab === 'counseling' && <CounselingTab/>}
+          {tab === 'seatReservation' && <SeatReservationTab/>}
+          {tab === 'studyReservation' && <StudyReservationTab/>}
         </div>
       </div>
   );
@@ -84,7 +93,6 @@ function ProfileTab() {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [email, setEmail] = useState('');
-  const [gender, setGender] = useState('');
   const [editMsg, setEditMsg] = useState('');
   const [editErr, setEditErr] = useState('');
 
@@ -93,7 +101,6 @@ function ProfileTab() {
         .then(data => {
           setProfile(data);
           setEmail(data.email || '');
-          setGender(data.gender || '');
         })
         .catch(e => setError(e.message))
         .finally(() => setLoading(false));
@@ -104,14 +111,13 @@ function ProfileTab() {
     setEditMsg('');
     setEditErr('');
     try {
-      await updateMyProfile({oldPassword, newPassword: newPassword || null, email, gender: gender || null});
+      await updateMyProfile({oldPassword, newPassword: newPassword || null, email});
       setEditMsg('정보가 수정되었습니다.');
       setOldPassword('');
       setNewPassword('');
       const updated = await fetchMyProfile();
       setProfile(updated);
       setEmail(updated.email || '');
-      setGender(updated.gender || '');
     } catch (err) {
       setEditErr(err.message);
     }
@@ -157,14 +163,6 @@ function ProfileTab() {
             <div className="mb-3">
               <label className="form-label">이메일</label>
               <input type="email" className="form-control" value={email} onChange={e => setEmail(e.target.value)}/>
-            </div>
-            <div className="mb-3">
-              <label className="form-label">성별</label>
-              <select className="form-select" value={gender} onChange={e => setGender(e.target.value)}>
-                <option value="">선택하세요</option>
-                <option value="MALE">남성</option>
-                <option value="FEMALE">여성</option>
-              </select>
             </div>
             {editMsg && <div className="alert alert-success py-2">{editMsg}</div>}
             {editErr && <div className="alert alert-danger py-2">{editErr}</div>}
@@ -320,8 +318,14 @@ function ReservationTab() {
                       <td>{formatTime(r.endTime)}</td>
                       <td>{r.purpose || '-'}</td>
                       <td>{r.clubName || '-'}</td>
-                      <td><span
-                          className={`mypage-badge ${STATUS_CLASSES[r.status] || ''}`}>{STATUS_LABELS[r.status] || r.status}</span>
+                      <td>
+                        <span className={`mypage-badge ${STATUS_CLASSES[r.status] || ''}`}>
+                          {STATUS_LABELS[r.status] || r.status}
+                        </span>
+                        {/* 관리자 거절 시 사유 표시 — ResponseReservation.rejectReason 필드 */}
+                        {r.status === 'REJECTED' && r.rejectReason && (
+                            <div className="text-danger small mt-1">사유: {r.rejectReason}</div>
+                        )}
                       </td>
                       <td>
                         {r.status === 'PENDING' && (
@@ -407,6 +411,122 @@ function CounselingTab() {
                                     onClick={() => handleCancel(r.id)}>취소</button>
                         )}
                       </td>
+                    </tr>
+                ))}
+                </tbody>
+              </table>
+            </div>
+        )}
+      </div>
+  );
+}
+
+// 열람실 예약 내역 탭 — 내가 예약한 좌석 목록 (로그인 기반)
+// API 경로에 buildingId 필요 → fetchBuildings()로 slug='library' 건물 ID를 동적 조회
+function SeatReservationTab() {
+  const [list, setList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchBuildings()
+        .then(buildings => {
+          const lib = buildings.find(b => b.slug === 'library');
+          if (!lib) throw new Error('도서관 건물을 찾을 수 없습니다.');
+          return fetchMySeatReservations(lib.id);
+        })
+        .then(setList)
+        .catch(e => setError(e.message))
+        .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="mypage-loading">로딩 중...</div>;
+  if (error) return <div className="alert alert-danger">{error}</div>;
+
+  return (
+      <div>
+        <div className="mypage-section-header">
+          <h3>열람실 예약 내역</h3>
+          <p className="mypage-section-sub">내 도서관 열람실 좌석 예약 현황입니다.</p>
+        </div>
+        {list.length === 0 ? (
+            <div className="mypage-empty">열람실 예약 내역이 없습니다.</div>
+        ) : (
+            <div className="table-responsive">
+              <table className="table mypage-table">
+                <thead>
+                <tr>
+                  <th>열람실</th>
+                  <th>층</th>
+                  <th>좌석 번호</th>
+                  <th>예약 날짜</th>
+                </tr>
+                </thead>
+                <tbody>
+                {list.map(r => (
+                    <tr key={r.id}>
+                      <td>{r.roomName}</td>
+                      <td>{r.floor}</td>
+                      <td>{r.seatNo}번</td>
+                      <td>{r.date}</td>
+                    </tr>
+                ))}
+                </tbody>
+              </table>
+            </div>
+        )}
+      </div>
+  );
+}
+
+// 스터디룸 예약 내역 탭 — 내가 예약한 스터디룸 목록 (로그인 기반)
+// SeatReservationTab과 동일한 패턴: fetchBuildings → library slug → API 호출
+function StudyReservationTab() {
+  const [list, setList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchBuildings()
+        .then(buildings => {
+          const lib = buildings.find(b => b.slug === 'library');
+          if (!lib) throw new Error('도서관 건물을 찾을 수 없습니다.');
+          return fetchMyStudyRoomReservations(lib.id);
+        })
+        .then(setList)
+        .catch(e => setError(e.message))
+        .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="mypage-loading">로딩 중...</div>;
+  if (error) return <div className="alert alert-danger">{error}</div>;
+
+  return (
+      <div>
+        <div className="mypage-section-header">
+          <h3>스터디룸 예약 내역</h3>
+          <p className="mypage-section-sub">내 도서관 스터디룸 예약 현황입니다.</p>
+        </div>
+        {list.length === 0 ? (
+            <div className="mypage-empty">스터디룸 예약 내역이 없습니다.</div>
+        ) : (
+            <div className="table-responsive">
+              <table className="table mypage-table">
+                <thead>
+                <tr>
+                  <th>호실</th>
+                  <th>층</th>
+                  <th>예약 날짜</th>
+                  <th>시간</th>
+                </tr>
+                </thead>
+                <tbody>
+                {list.map(r => (
+                    <tr key={r.id}>
+                      <td>{r.roomName}</td>
+                      <td>{r.floor}</td>
+                      <td>{r.date}</td>
+                      <td>{String(r.startHour).padStart(2, '0')}:00 ~ {String(r.endHour).padStart(2, '0')}:00</td>
                     </tr>
                 ))}
                 </tbody>

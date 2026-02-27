@@ -82,7 +82,7 @@ export function AuthModal({onClose}) {
     }
   }
 
-  const roles = [{key: '학생', icon: '🎓', label: '학생', desc: '동아리 가입 가능\n시설 예약 불가'}, {
+  const roles = [{key: '학생', icon: '🎓', label: '학생', desc: '동아리 가입 가능\n시설 예약 및 상담 예약 가능'}, {
     key: '교수', icon: '👨‍🏫', label: '교수', desc: '수업 개설\n반복 예약 가능',
   }];
 
@@ -102,7 +102,10 @@ export function AuthModal({onClose}) {
           </div>
         </div>
 
-        {tab === 'login' ? (<>
+        {tab === 'login' ? (<form onSubmit={e => {
+          e.preventDefault();
+          handleLogin();
+        }}>
           <div className="mb-3">
             <label className="form-label">학번 / 교번</label>
             <input type="text" className="form-control" placeholder="학번 또는 교번을 입력하세요" value={loginId}
@@ -113,8 +116,11 @@ export function AuthModal({onClose}) {
             <input type="password" className="form-control" placeholder="비밀번호를 입력하세요" value={loginPw}
                    onChange={e => setLoginPw(e.target.value)}/>
           </div>
-          <button className="btn btn-primary w-100" onClick={handleLogin}>로그인</button>
-        </>) : (<>
+          <button type="submit" className="btn btn-primary w-100">로그인</button>
+        </form>) : (<form onSubmit={e => {
+          e.preventDefault();
+          handleSignup();
+        }}>
           <div className="mb-3">
             <label className="form-label">회원 유형 선택</label>
             <div className="role-cards">
@@ -175,8 +181,8 @@ export function AuthModal({onClose}) {
             <input type="password" className="form-control" placeholder="비밀번호를 다시 입력하세요" value={signupPw2}
                    onChange={e => setSignupPw2(e.target.value)}/>
           </div>
-          <button className="btn btn-primary w-100" onClick={handleSignup}>회원가입</button>
-        </>)}
+          <button type="submit" className="btn btn-primary w-100">회원가입</button>
+        </form>)}
       </div>
     </div>
   </div>);

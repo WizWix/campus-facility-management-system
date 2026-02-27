@@ -1,32 +1,38 @@
 package io.github.wizwix.cfms.service.iface;
 
-import io.github.wizwix.cfms.dto.response.building.LibraryBookResponse;
-import io.github.wizwix.cfms.dto.response.building.LibraryCongestionResponse;
-import io.github.wizwix.cfms.dto.response.building.LibraryNoticeResponse;
-import io.github.wizwix.cfms.dto.response.building.LibraryReadingRoomResponse;
-import io.github.wizwix.cfms.dto.response.building.LibraryStudyRoomResponse;
+import io.github.wizwix.cfms.dto.response.building.ResponseLibraryBook;
+import io.github.wizwix.cfms.dto.response.building.ResponseLibraryCongestion;
+import io.github.wizwix.cfms.dto.response.building.ResponseLibraryNotice;
+import io.github.wizwix.cfms.dto.response.building.ResponseLibraryReadingRoom;
+import io.github.wizwix.cfms.dto.response.building.ResponseLibraryStudyRoom;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ILibraryService {
 
   // 4. 혼잡도
-  LibraryCongestionResponse getCongestion(Long buildingId);
+  ResponseLibraryCongestion getCongestion(Long buildingId);
 
-  LibraryNoticeResponse getNotice(Long buildingId, Long noticeId);
+  // 6. 내 예약 조회 (마이페이지용)
+  List<Map<String, Object>> getMySeatReservations(String userNumber);
+
+  List<Map<String, Object>> getMyStudyRoomReservations(String userNumber);
+
+  ResponseLibraryNotice getNotice(Long buildingId, Long noticeId);
 
   // 5. 공지사항
-  List<LibraryNoticeResponse> getNotices(Long buildingId);
+  List<ResponseLibraryNotice> getNotices(Long buildingId);
 
-  LibraryReadingRoomResponse getReadingRoomSeats(Long buildingId, Long roomId);
+  ResponseLibraryReadingRoom getReadingRoomSeats(Long buildingId, Long roomId);
 
   // 1. 열람실
-  List<LibraryReadingRoomResponse> getReadingRooms(Long buildingId);
+  List<ResponseLibraryReadingRoom> getReadingRooms(Long buildingId);
 
-  LibraryStudyRoomResponse getStudyRoomSlots(Long buildingId, Long roomId, String date);
+  ResponseLibraryStudyRoom getStudyRoomSlots(Long buildingId, Long roomId, String date);
 
   // 3. 스터디룸
-  List<LibraryStudyRoomResponse> getStudyRooms(Long buildingId);
+  List<ResponseLibraryStudyRoom> getStudyRooms(Long buildingId);
 
   void reserveBook(Long buildingId, Long bookId);
 
@@ -35,5 +41,5 @@ public interface ILibraryService {
   void reserveStudyRoom(Long buildingId, Long roomId, String date, Integer startHour, String userNumber);
 
   // 2. 도서 검색
-  List<LibraryBookResponse> searchBooks(Long buildingId, String query, String publisher, String category);
+  List<ResponseLibraryBook> searchBooks(Long buildingId, String query, String publisher, String category);
 }

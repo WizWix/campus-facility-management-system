@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class LibraryNoticeResponse {
+public class ResponseLibraryNotice {
   private Long id;
   /** 상세 조회 시에만 채워짐 (목록 조회 시 null) */
   private String content;
