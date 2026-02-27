@@ -1,5 +1,6 @@
 package io.github.wizwix.cfms.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -31,6 +32,7 @@ public class CafeteriaMealItem {
   private Integer discountPrice;
   /// 소속 끼니
   @ManyToOne(fetch = FetchType.LAZY)
+  @JsonBackReference
   private CafeteriaMeal meal;
   /// 정가 (원)
   private Integer price;

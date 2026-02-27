@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.atomic.LongAdder;
+
 @Component
 @Profile("dev")
 @Slf4j
@@ -22,19 +24,23 @@ public class CounselorDevLoader extends BaseDevLoader<Counselor> {
 
   @Override
   public void load() {
+    LongAdder adder = new LongAdder();
     processItems(counselor -> {
       if (!repo.existsByName(counselor.getName())) {
         repo.save(counselor);
-        log.info("Loaded dev counselor: ({} / {} / {})", counselor.getName(), counselor.getDepartment(), counselor.getPosition());
+        adder.increment();
       }
     });
+    log.info("Dev Profile: Loaded {} counselors", adder.sum());
   }
 
   @Override
   public void unload() {
+    LongAdder adder = new LongAdder();
     processItems(counselor -> repo.findByName(counselor.getName()).ifPresent(existing -> {
       repo.delete(existing);
-      log.info("Unloaded dev counselor: ({} / {} / {})", existing.getName(), existing.getDepartment(), existing.getPosition());
+      adder.increment();
     }));
+    log.info("Dev Profile: Unloaded {} counselors", adder.sum());
   }
 }

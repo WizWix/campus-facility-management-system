@@ -7,28 +7,33 @@ import io.github.wizwix.cfms.dto.response.building.LibraryReadingRoomResponse;
 import io.github.wizwix.cfms.dto.response.building.LibraryStudyRoomResponse;
 
 import java.util.List;
-import java.util.Map;
 
 public interface ILibraryService {
-
-  // 1. 열람실
-  List<LibraryReadingRoomResponse> getReadingRooms(Long buildingId);
-  LibraryReadingRoomResponse getReadingRoomSeats(Long buildingId, Long roomId);
-  void reserveSeat(Long buildingId, Long roomId, Integer seatNo, String userNumber);
-
-  // 2. 도서 검색
-  List<LibraryBookResponse> searchBooks(Long buildingId, String query, String publisher, String category);
-  void reserveBook(Long buildingId, Long bookId);
-
-  // 3. 스터디룸
-  List<LibraryStudyRoomResponse> getStudyRooms(Long buildingId);
-  LibraryStudyRoomResponse getStudyRoomSlots(Long buildingId, Long roomId, String date);
-  void reserveStudyRoom(Long buildingId, Long roomId, String date, Integer startHour, String userNumber);
 
   // 4. 혼잡도
   LibraryCongestionResponse getCongestion(Long buildingId);
 
+  LibraryNoticeResponse getNotice(Long buildingId, Long noticeId);
+
   // 5. 공지사항
   List<LibraryNoticeResponse> getNotices(Long buildingId);
-  LibraryNoticeResponse getNotice(Long buildingId, Long noticeId);
+
+  LibraryReadingRoomResponse getReadingRoomSeats(Long buildingId, Long roomId);
+
+  // 1. 열람실
+  List<LibraryReadingRoomResponse> getReadingRooms(Long buildingId);
+
+  LibraryStudyRoomResponse getStudyRoomSlots(Long buildingId, Long roomId, String date);
+
+  // 3. 스터디룸
+  List<LibraryStudyRoomResponse> getStudyRooms(Long buildingId);
+
+  void reserveBook(Long buildingId, Long bookId);
+
+  void reserveSeat(Long buildingId, Long roomId, Integer seatNo, String userNumber);
+
+  void reserveStudyRoom(Long buildingId, Long roomId, String date, Integer startHour, String userNumber);
+
+  // 2. 도서 검색
+  List<LibraryBookResponse> searchBooks(Long buildingId, String query, String publisher, String category);
 }

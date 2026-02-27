@@ -18,7 +18,7 @@ public class EntityReferenceDeserializer<T> extends JsonDeserializer<T> {
   public T deserialize(JsonParser p, DeserializationContext ctx) throws IOException {
     if (!p.hasToken(JsonToken.VALUE_STRING)) {
       //noinspection unchecked
-      return (T) ctx.reportInputMismatch(handledType(), "Expected a string ID for entity lookup, but found %s", p.currentToken());
+      return ctx.reportInputMismatch(handledType(), "Expected a string ID for entity lookup, but found %s", p.currentToken());
     }
 
     String identifier = p.getText();

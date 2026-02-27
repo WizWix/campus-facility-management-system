@@ -36,10 +36,11 @@ public class DormDevLoader extends BaseDevLoader<DormRoom> {
 
   @Override
   public void unload() {
-
+    LongAdder adder = new LongAdder();
     processItems(room -> repo.findByRoomNumber(room.getRoomNumber()).ifPresent(existing -> {
       repo.delete(existing);
-      log.info("Unloaded dev dorm room: ({} / {} / {})", existing.getRoomNumber(), existing.getGender(), existing.getFloor());
+      adder.increment();
     }));
+    log.info("Dev Profile: Unloaded {} dorms", adder.sum());
   }
 }

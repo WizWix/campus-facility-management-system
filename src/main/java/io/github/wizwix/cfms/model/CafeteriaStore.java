@@ -1,14 +1,19 @@
 package io.github.wizwix.cfms.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Entity
 @Table(name = "cfms_cafeteria_store")
@@ -29,6 +34,10 @@ public class CafeteriaStore {
   private String description;
   /// 운영시간 (e.g. '10:00 ~ 20:00')
   private String hours;
+  /// 메뉴
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "store", orphanRemoval = true)
+  @JsonManagedReference
+  private List<CafeteriaStoreMenu> menus;
   /// 대표 메뉴명
   private String representative;
 }
