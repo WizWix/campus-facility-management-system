@@ -41,5 +41,5 @@ spring:
     init:
       encoding: utf-8
 jwt:
-  secret: "${JWT_SECRET:your_default_very_long_random_string_here_for_dev_only}"
+  secret: "${JWT_SECRET:XnU6QEqivzFIBkPC70xQr5KI3y5HBbsUXnU6QEqivzFIBkPC70xQr5KI3y5HBbsU}"
   expiration: 3600000 # 1 hour

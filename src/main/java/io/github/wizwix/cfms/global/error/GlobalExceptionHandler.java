@@ -1,5 +1,6 @@
 package io.github.wizwix.cfms.global.error;
 
+import io.github.wizwix.cfms.exception.NotFoundException;
 import io.github.wizwix.cfms.exception.NotImplementedException;
 import io.github.wizwix.cfms.exception.TooManyRequestsException;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,20 +16,13 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
-  private final JsonErrorResponseWriter writer;
-
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ResponseError> handleGeneral(Exception e, HttpServletResponse response) {
     return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
   }
 
   private ResponseEntity<ResponseError> buildResponse(HttpStatus httpStatus, String message) {
-    ResponseError body = new ResponseError(
-        httpStatus.value(),
-        httpStatus.getReasonPhrase(),
-        message,
-        System.currentTimeMillis()
-    );
+    ResponseError body = new ResponseError(httpStatus.value(), httpStatus.getReasonPhrase(), message, System.currentTimeMillis());
     return ResponseEntity.status(httpStatus).body(body);
   }
 
@@ -45,6 +39,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(IllegalStateException.class)
   public ResponseEntity<ResponseError> handleIllegalState(IllegalStateException e, HttpServletResponse response) {
     return buildResponse(HttpStatus.CONFLICT, e.getMessage());
+  }
+
+  @ExceptionHandler(NotFoundException.class)
+  public ResponseEntity<ResponseError> handleNotFound(NotFoundException e, HttpServletResponse response) {
+    return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
   }
 
   @ExceptionHandler(NotImplementedException.class)
