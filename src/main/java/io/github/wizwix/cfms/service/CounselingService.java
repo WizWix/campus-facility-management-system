@@ -5,8 +5,8 @@ import io.github.wizwix.cfms.dto.response.counseling.ResponseCounselingReservati
 import io.github.wizwix.cfms.dto.response.counseling.ResponseCounselor;
 import io.github.wizwix.cfms.exception.NotFoundException;
 import io.github.wizwix.cfms.model.User;
-import io.github.wizwix.cfms.model.counceling.CounselingReservation;
-import io.github.wizwix.cfms.model.counceling.Counselor;
+import io.github.wizwix.cfms.model.counseling.CounselingReservation;
+import io.github.wizwix.cfms.model.counseling.Counselor;
 import io.github.wizwix.cfms.model.enums.CounselingDepartment;
 import io.github.wizwix.cfms.model.enums.ReservationStatus;
 import io.github.wizwix.cfms.repo.UserRepository;

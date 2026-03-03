@@ -2,7 +2,7 @@ package io.github.wizwix.cfms.global.config.dev;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.wizwix.cfms.global.config.dev.base.BaseDevLoader;
-import io.github.wizwix.cfms.model.counceling.Counselor;
+import io.github.wizwix.cfms.model.counseling.Counselor;
 import io.github.wizwix.cfms.repo.counceling.CounselorRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;

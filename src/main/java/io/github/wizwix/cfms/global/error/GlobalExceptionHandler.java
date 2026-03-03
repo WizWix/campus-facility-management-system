@@ -1,5 +1,7 @@
 package io.github.wizwix.cfms.global.error;
 
+import io.github.wizwix.cfms.exception.DuplicatedReservationException;
+import io.github.wizwix.cfms.exception.NotAvailableException;
 import io.github.wizwix.cfms.exception.NotFoundException;
 import io.github.wizwix.cfms.exception.NotImplementedException;
 import io.github.wizwix.cfms.exception.TooManyRequestsException;
@@ -16,6 +18,11 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
+  @ExceptionHandler(DuplicatedReservationException.class)
+  public ResponseEntity<ResponseError> handleDuplicatedReservationException(DuplicatedReservationException e, HttpServletResponse response) {
+    return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+  }
+
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ResponseError> handleGeneral(Exception e, HttpServletResponse response) {
     return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
@@ -39,6 +46,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(IllegalStateException.class)
   public ResponseEntity<ResponseError> handleIllegalState(IllegalStateException e, HttpServletResponse response) {
     return buildResponse(HttpStatus.CONFLICT, e.getMessage());
+  }
+
+  @ExceptionHandler(NotAvailableException.class)
+  public ResponseEntity<ResponseError> handleNotAvailable(DuplicatedReservationException e, HttpServletResponse response) {
+    return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
   }
 
   @ExceptionHandler(NotFoundException.class)

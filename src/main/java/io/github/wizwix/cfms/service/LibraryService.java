@@ -5,6 +5,8 @@ import io.github.wizwix.cfms.dto.response.building.ResponseLibraryCongestion;
 import io.github.wizwix.cfms.dto.response.building.ResponseLibraryNotice;
 import io.github.wizwix.cfms.dto.response.building.ResponseLibraryReadingRoom;
 import io.github.wizwix.cfms.dto.response.building.ResponseLibraryStudyRoom;
+import io.github.wizwix.cfms.exception.DuplicatedReservationException;
+import io.github.wizwix.cfms.exception.NotAvailableException;
 import io.github.wizwix.cfms.exception.NotFoundException;
 import io.github.wizwix.cfms.model.library.LibraryBookReservation;
 import io.github.wizwix.cfms.model.library.LibraryReadingRoom;
@@ -38,7 +40,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class LibraryService implements ILibraryService {
-
   // 시간대별 혼잡도 추이 — 통계 기반 고정값 (TODO: 센서/로그 연동)
   private static final List<Map<String, Object>> HOURLY_TREND = List.of(Map.of("hour", "08", "rate", 10), Map.of("hour", "09", "rate", 35), Map.of("hour", "10", "rate", 58), Map.of("hour", "11", "rate", 72), Map.of("hour", "12", "rate", 65), Map.of("hour", "13", "rate", 55), Map.of("hour", "14", "rate", 78), Map.of("hour", "15", "rate", 82), Map.of("hour", "16", "rate", 75), Map.of("hour", "17", "rate", 60), Map.of("hour", "18", "rate", 42), Map.of("hour", "19", "rate", 30), Map.of("hour", "20", "rate", 20), Map.of("hour", "21", "rate", 15));
   private static final int LOBBY_CAPACITY = 50;
@@ -224,10 +225,10 @@ public class LibraryService implements ILibraryService {
   public void reserveBook(Long bookId, String userNumber) {
     var book = bookRepo.findById(bookId).orElseThrow(() -> new NotFoundException("도서를 찾을 수 없습니다: " + bookId));
     if (!Boolean.TRUE.equals(book.getAvailable())) {
-      throw new RuntimeException("대출 불가능한 도서입니다.");
+      throw new NotAvailableException("대출 불가능한 도서입니다.");
     }
     if (bookResRepo.existsByBookIdAndUserNumber(bookId, userNumber)) {
-      throw new RuntimeException("이미 예약한 도서입니다.");
+      throw new DuplicatedReservationException("이미 예약한 도서입니다.");
     }
     bookResRepo.save(LibraryBookReservation.builder().bookId(bookId).userNumber(userNumber).reservedAt(LocalDateTime.now()).build());
     book.setAvailable(false);
@@ -245,12 +246,12 @@ public class LibraryService implements ILibraryService {
 
     // 1인 1좌석 제한: 같은 날 어느 열람실이든 이미 예약한 경우 거부
     if (seatResRepo.existsByUserNumberAndDate(userNumber, today)) {
-      throw new RuntimeException("오늘 이미 열람실 좌석을 예약하셨습니다. 1인 1좌석만 예약 가능합니다.");
+      throw new DuplicatedReservationException("오늘 이미 열람실 좌석을 예약하셨습니다. 1인 1좌석만 예약 가능합니다.");
     }
 
     // 해당 좌석 이미 예약된 경우 거부
     if (seatResRepo.existsByRoomIdAndSeatNoAndDate(roomId, seatNo, today)) {
-      throw new RuntimeException("이미 다른 사용자가 예약한 좌석입니다.");
+      throw new DuplicatedReservationException("이미 다른 사용자가 예약한 좌석입니다.");
     }
 
     seatResRepo.save(LibrarySeatReservation.builder().roomId(roomId).seatNo(seatNo).date(today).userNumber(userNumber).build());
@@ -269,12 +270,12 @@ public class LibraryService implements ILibraryService {
 
     // 같은 유저가 같은 날 같은 시간에 이미 다른 방을 예약했는지 확인 (시간 중복 방지)
     if (studyResRepo.existsByUserNumberAndDateAndStartHour(userNumber, localDate, startHour)) {
-      throw new RuntimeException(String.format("동일한 시간에 예약하셨습니다. %02d:00 시간대는 이미 다른 스터디룸을 예약하셨습니다.", startHour));
+      throw new DuplicatedReservationException(String.format("동일한 시간에 예약하셨습니다. %02d:00 시간대는 이미 다른 스터디룸을 예약하셨습니다.", startHour));
     }
 
     // 해당 방 + 시간 이미 다른 사람이 예약한 경우
     if (studyResRepo.existsByRoomIdAndDateAndStartHour(roomId, localDate, startHour)) {
-      throw new RuntimeException("이미 다른 사용자가 예약한 시간입니다.");
+      throw new DuplicatedReservationException("이미 다른 사용자가 예약한 시간입니다.");
     }
 
     studyResRepo.save(LibraryStudyRoomReservation.builder().roomId(roomId).date(localDate).startHour(startHour).userNumber(userNumber).build());

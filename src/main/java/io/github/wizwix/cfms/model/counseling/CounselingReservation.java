@@ -1,4 +1,4 @@
-package io.github.wizwix.cfms.model.counceling;
+package io.github.wizwix.cfms.model.counseling;
 
 import io.github.wizwix.cfms.model.User;
 import io.github.wizwix.cfms.model.enums.ReservationStatus;

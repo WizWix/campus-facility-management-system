@@ -1,8 +1,8 @@
 package io.github.wizwix.cfms.repo.counceling;
 
 import io.github.wizwix.cfms.model.User;
-import io.github.wizwix.cfms.model.counceling.CounselingReservation;
-import io.github.wizwix.cfms.model.counceling.Counselor;
+import io.github.wizwix.cfms.model.counseling.CounselingReservation;
+import io.github.wizwix.cfms.model.counseling.Counselor;
 import io.github.wizwix.cfms.model.enums.ReservationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 

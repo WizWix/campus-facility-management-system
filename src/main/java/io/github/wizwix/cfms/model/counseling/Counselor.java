@@ -1,4 +1,4 @@
-package io.github.wizwix.cfms.model.counceling;
+package io.github.wizwix.cfms.model.counseling;
 
 import io.github.wizwix.cfms.model.enums.CounselingDepartment;
 import jakarta.persistence.Entity;
