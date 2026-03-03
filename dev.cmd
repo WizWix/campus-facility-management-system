@@ -17,7 +17,7 @@ if %ErrorLevel% neq 0 (
 )
 
 echo [INFO] 프로젝트 및 웹 브라우저 시작 중...
-start "1" cmd /k "java -jar build\libs\campus-facility-management-system-1.0.0.jar"
+start "1" cmd /k "java -jar build\libs\campus-facility-management-system-1.0.0.jar --spring.profiles.active=dev"
 start "2" "http://localhost:8080"
 
 echo [INFO] 끝.
