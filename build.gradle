@@ -3,7 +3,7 @@ plugins {
   id 'java'
   id 'org.springframework.boot' version '3.5.10'
   id 'io.spring.dependency-management' version '1.1.7'
-  id 'io.github.tetratheta.bun' version '0.0.22'
+  id 'io.github.tetratheta.bun' version '0.0.1'
 }
 
 group = 'io.github.wizwix'
@@ -73,9 +73,10 @@ springBoot { buildInfo() }
 test { useJUnitPlatform() }
 
 // bun
-bun.forceBun = true
-bunInstall.workingDir(frontendDir)
-bunBuild.workingDir(frontendDir)
+bun {
+  forceBun = true
+  workingDir = frontendDir
+}
 
 configurations.configureEach {
   resolutionStrategy.cacheChangingModulesFor(0, 'seconds')
