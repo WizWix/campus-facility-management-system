@@ -16,5 +16,5 @@ import java.time.LocalDateTime;
 /// @param partnerName [String] 룸메이트 이름 (null이면 단독 신청)
 /// @param createdAt   [LocalDateTime] 신청 일시
 public record ResponseDormMyApplication(Long id, String roomNumber, String semester, DormPeriod period,
-                                        DormApplicationStatus status, String partnerName,
-                                        LocalDateTime createdAt) {}
+                                        DormApplicationStatus status, String applicantName,
+                                        String partnerName, LocalDateTime createdAt) {}
