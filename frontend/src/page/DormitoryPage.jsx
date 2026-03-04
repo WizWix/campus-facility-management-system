@@ -185,8 +185,10 @@ export function DormitoryPage() {
         onClose={() => setApplyModal(null)}
         onSuccess={() => {
           setApplyModal(null);
-          // 새로고침
-          fetchDormRooms(selectedGender).then(setFloors);
+          // 새로고침 (내림차순 정렬 유지)
+          fetchDormRooms(selectedGender).then(data => {
+            setFloors([...data].sort((a, b) => b.floor - a.floor));
+          });
         }}
     />}
 
