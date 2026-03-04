@@ -54,4 +54,12 @@ public class DormApplication {
   @Enumerated(EnumType.STRING)
   @Column(columnDefinition = "varchar(50)")
   private DormApplicationStatus status;
+  /// 거절 사유 (관리자)
+  private String rejectReason;
+  /// 처리한 관리자
+  @ManyToOne
+  @JoinColumn(name = "processed_by_id")
+  private User processedBy;
+  /// 처리 시각
+  private LocalDateTime processedAt;
 }
