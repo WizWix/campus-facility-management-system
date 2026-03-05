@@ -31,28 +31,30 @@ public class ClubService implements IClubService {
 
   @Override
   public ResponseClubDetail createClub(String userNumber, RequestClubCreate req) {
+    User user = userRepository.findByNumber(userNumber).orElseThrow(() -> new NotFoundException("회원을 찾을 수 없습니다."));
     Club club = new Club();
     club.setName(req.name());
     club.setSlug(req.slug());
     club.setDescription(req.description());
     club.setAutoApprove(req.autoApprove());
     club.setStatus(ClubStatus.PENDING);
+    club.setPresident(user);
     club.setCreatedAt(LocalDateTime.now());
     clubRepository.save(club);
-    return new ResponseClubDetail(club.getId(), club.getName(), club.getSlug(), club.getDescription(), club.getPresident().getName(), club.getAutoApprove(), getMemberCount(club), club.getCreatedAt(), club.getStatus());
+    return new ResponseClubDetail(club.getId(), club.getName(), club.getSlug(), club.getDescription(), user.getName(), club.getAutoApprove(), getMemberCount(club), club.getCreatedAt(), club.getStatus());
   }
 
   @Override
   public ResponseClubDetail getClubDetail(String slug) {
     Club club = clubRepository.findBySlug(slug).orElseThrow(() -> new NotFoundException("동아리를 찾을 수 없습니다."));
-    return new ResponseClubDetail(club.getId(), club.getName(), club.getSlug(), club.getDescription(), club.getPresident().getName(), club.getAutoApprove(), getMemberCount(club), club.getCreatedAt(), club.getStatus());
+    return new ResponseClubDetail(club.getId(), club.getName(), club.getSlug(), club.getDescription(), getPresidentName(club), club.getAutoApprove(), getMemberCount(club), club.getCreatedAt(), club.getStatus());
   }
 
   @Override
   public List<ResponseClubList> getClubListByStatus(ClubStatus status) {
     var list = new ArrayList<ResponseClubList>();
     clubRepository.findByStatus(status).forEach(c -> {
-      var resp = new ResponseClubList(c.getId(), c.getName(), c.getSlug(), c.getPresident().getName(), c.getStatus(), getMemberCount(c), c.getCreatedAt());
+      var resp = new ResponseClubList(c.getId(), c.getName(), c.getSlug(), getPresidentName(c), c.getStatus(), getMemberCount(c), c.getCreatedAt());
       list.add(resp);
     });
     return list;
@@ -63,7 +65,7 @@ public class ClubService implements IClubService {
     List<Club> clubs = clubRepository.searchByKeyword(query);
     List<ResponseClubList> list = new ArrayList<>();
     clubs.forEach(c -> {
-      var resp = new ResponseClubList(c.getId(), c.getName(), c.getSlug(), c.getPresident().getName(), c.getStatus(), getMemberCount(c), c.getCreatedAt());
+      var resp = new ResponseClubList(c.getId(), c.getName(), c.getSlug(), getPresidentName(c), c.getStatus(), getMemberCount(c), c.getCreatedAt());
       list.add(resp);
     });
     return list;
@@ -80,7 +82,7 @@ public class ClubService implements IClubService {
     club.setAutoApprove(req.autoApprove());
 
     clubRepository.save(club);
-    return new ResponseClubDetail(club.getId(), club.getName(), club.getSlug(), club.getDescription(), club.getPresident().getName(), club.getAutoApprove(), getMemberCount(club), club.getCreatedAt(), club.getStatus());
+    return new ResponseClubDetail(club.getId(), club.getName(), club.getSlug(), club.getDescription(), getPresidentName(club), club.getAutoApprove(), getMemberCount(club), club.getCreatedAt(), club.getStatus());
   }
 
   @Override
@@ -93,10 +95,14 @@ public class ClubService implements IClubService {
     club.setRejectReason(reason);
     clubRepository.save(club);
 
-    return new ResponseClubDetail(club.getId(), club.getName(), club.getSlug(), club.getDescription(), club.getPresident().getName(), club.getAutoApprove(), getMemberCount(club), club.getCreatedAt(), club.getStatus());
+    return new ResponseClubDetail(club.getId(), club.getName(), club.getSlug(), club.getDescription(), getPresidentName(club), club.getAutoApprove(), getMemberCount(club), club.getCreatedAt(), club.getStatus());
   }
 
   private int getMemberCount(Club club) {
     return clubMemberRepository.countByClubId(club.getId());
+  }
+
+  private String getPresidentName(Club club) {
+    return club.getPresident() != null ? club.getPresident().getName() : null;
   }
 }
