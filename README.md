@@ -19,7 +19,7 @@
 
 ## 개요
 
-CFMS는 캠퍼스의 모든 시설을 하나의 서비스에서 관리하는 것을 목적으로 하는 통합 캠퍼스 포털입니다.
+CFMS는 캠퍼스의 모든 시설을 하나의 서비스에서 관리하는 것을 목적으로 하는 통합 캠퍼스 포털 프로젝트입니다.
 
 빌드 시 React 프론트엔드가 Spring Boot 리소스에 통합되어 **단일 JAR**로 배포됩니다. 별도의 프론트엔드 서버 없이 Spring Boot 단일 프로세스로 모든 요청을 처리합니다.
 
@@ -70,7 +70,7 @@ CFMS는 캠퍼스의 모든 시설을 하나의 서비스에서 관리하는 것
 
 ### 환경 변수
 
-아래 환경 변수를 설정합니다. 값을 지정하지 않으면 괄호 안의 기본값이 사용됩니다.
+아래 환경 변수를 설정합니다. 값을 지정하지 않으면 기본값이 사용됩니다.
 
 | 환경 변수 | 기본값 | 설명 |
 |---|---|---|
@@ -80,7 +80,7 @@ CFMS는 캠퍼스의 모든 시설을 하나의 서비스에서 관리하는 것
 | `JWT_SECRET` | *(내장 기본값)* | JWT 서명 시크릿 키 (프로덕션에서는 반드시 변경) |
 
 > `createDatabaseIfNotExist=true` 옵션이 기본 URL에 포함되어 있어 DB가 없으면 자동 생성됩니다.
-> 테이블은 JPA `ddl-auto: update` 설정으로 자동 생성·갱신됩니다.
+> 테이블은 `spring.jpa.hibernate.ddl-auto: update` 설정으로 자동 생성·갱신됩니다.
 
 ### 실행 방법
 
@@ -88,14 +88,14 @@ CFMS는 캠퍼스의 모든 시설을 하나의 서비스에서 관리하는 것
 
 ```bash
 # 저장소 클론
-git clone <repository-url>
-cd cfms
+git clone https://github.com/WizWix/campus-facility-management-system
+cd campus-facility-management-system
 
 # 프론트엔드 의존성 설치 및 빌드 포함 전체 빌드
 ./gradlew build
 
 # dev 프로필로 실행 (시드 데이터 자동 로드)
-./gradlew bootRun --args='--spring.profiles.active=dev'
+java -jar build\libs\campus-facility-management-system-1.0.0.jar --spring.profiles.active=dev
 ```
 
 서버 기동 후 브라우저에서 [http://localhost:8080](http://localhost:8080) 에 접속합니다.
@@ -114,7 +114,7 @@ bun run dev
 
 ```bash
 ./gradlew build
-java -jar build/libs/cfms-1.0.0.jar
+java -jar build\libs\campus-facility-management-system-1.0.0.jar
 ```
 
 환경 변수를 직접 전달하는 경우:
@@ -125,7 +125,7 @@ java \
   -DMYSQL_USERNAME="cfms_user" \
   -DMYSQL_PASSWORD="your_password" \
   -DJWT_SECRET="your_very_long_secret_key" \
-  -jar build/libs/cfms-1.0.0.jar
+  -jar build\libs\campus-facility-management-system-1.0.0.jar
 ```
 
 ## 개발 프로필 (dev)
@@ -161,6 +161,9 @@ java \
 
 ### 인증 (`/api/auth`)
 
+<details>
+<summary>접기/펼치기</summary>
+
 | 메서드 | 경로 | 권한 | 설명 |
 |---|---|---|---|
 | `POST` | `/api/auth/login` | 공개 | 로그인 (JWT 쿠키 발급) |
@@ -170,14 +173,24 @@ java \
 | `POST` | `/api/auth/password-reset/verify` | 공개 | 비밀번호 재설정 2단계 (인증) |
 | `PATCH` | `/api/auth/password-reset/confirm` | 공개 | 비밀번호 재설정 3단계 (확정) |
 
+</details>
+
 ### 사용자 (`/api/users`)
+
+<details>
+<summary>접기/펼치기</summary>
 
 | 메서드 | 경로 | 권한 | 설명 |
 |---|---|---|---|
 | `GET` | `/api/users/me` | 인증 | 내 프로필 조회 |
 | `PATCH` | `/api/users/me` | 인증 | 내 정보 수정 |
 
+</details>
+
 ### 시설 예약 (`/api/reservations`)
+
+<details>
+<summary>접기/펼치기</summary>
 
 | 메서드 | 경로 | 권한 | 설명 |
 |---|---|---|---|
@@ -186,7 +199,12 @@ java \
 | `GET` | `/api/reservations/me` | 인증 | 내 예약 내역 조회 |
 | `DELETE` | `/api/reservations/{id}` | 인증 | 예약 취소 (PENDING만 가능) |
 
+</details>
+
 ### 도서관 (`/api/library`)
+
+<details>
+<summary>접기/펼치기</summary>
 
 | 메서드 | 경로 | 권한 | 설명 |
 |---|---|---|---|
@@ -206,7 +224,12 @@ java \
 | `GET` | `/api/library/notices` | 공개 | 공지사항 목록 |
 | `GET` | `/api/library/notices/{id}` | 공개 | 공지사항 상세 |
 
+</details>
+
 ### 기숙사 (`/api/dorms`)
+
+<details>
+<summary>접기/펼치기</summary>
 
 | 메서드 | 경로 | 권한 | 설명 |
 |---|---|---|---|
@@ -215,7 +238,12 @@ java \
 | `GET` | `/api/dorms/applications/me` | 인증 | 내 신청 내역 |
 | `DELETE` | `/api/dorms/applications/{id}` | 인증 | 신청 취소 (PENDING만 가능) |
 
+</details>
+
 ### 동아리 (`/api/clubs`)
+
+<details>
+<summary>접기/펼치기</summary>
 
 | 메서드 | 경로 | 권한 | 설명 |
 |---|---|---|---|
@@ -228,7 +256,12 @@ java \
 | `DELETE` | `/api/clubs/{slug}/members/{userId}` | 인증 (회장) | 부원 추방 |
 | `PATCH` | `/api/clubs/{slug}/members/{userId}/role` | 인증 (회장) | 부원 역할 변경 |
 
+</details>
+
 ### 상담 예약 (`/api/counseling`)
+
+<details>
+<summary>접기/펼치기</summary>
 
 | 메서드 | 경로 | 권한 | 설명 |
 |---|---|---|---|
@@ -237,6 +270,8 @@ java \
 | `POST` | `/api/counseling/reservations` | 인증 | 상담 예약 신청 |
 | `GET` | `/api/counseling/reservations/me` | 인증 | 내 상담 예약 내역 |
 | `DELETE` | `/api/counseling/reservations/{id}` | 인증 | 상담 예약 취소 |
+
+</details>
 
 ### 식당 (`/api/cafeterias`)
 
