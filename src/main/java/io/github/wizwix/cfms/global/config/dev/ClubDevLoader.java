@@ -6,13 +6,19 @@ import io.github.wizwix.cfms.global.config.dev.base.BaseDevLoader;
 import io.github.wizwix.cfms.global.config.dev.base.EntityReferenceDeserializer;
 import io.github.wizwix.cfms.model.User;
 import io.github.wizwix.cfms.model.club.Club;
+import io.github.wizwix.cfms.model.club.ClubMember;
+import io.github.wizwix.cfms.model.enums.ClubMemberStatus;
+import io.github.wizwix.cfms.model.enums.ClubRole;
+import io.github.wizwix.cfms.model.enums.ClubStatus;
 import io.github.wizwix.cfms.repo.UserRepository;
+import io.github.wizwix.cfms.repo.club.ClubMemberRepository;
 import io.github.wizwix.cfms.repo.club.ClubRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.atomic.LongAdder;
 
 @Component
@@ -20,31 +26,47 @@ import java.util.concurrent.atomic.LongAdder;
 @Slf4j
 public class ClubDevLoader extends BaseDevLoader<Club> {
   private final ClubRepository clubRepo;
+  private final ClubMemberRepository clubMemberRepo;
   private final UserRepository userRepo;
 
-  public ClubDevLoader(ResourceLoader loader, ObjectMapper mapper, ClubRepository repo, UserRepository userRepo) {
+  public ClubDevLoader(ResourceLoader loader, ObjectMapper mapper, ClubRepository clubRepo, ClubMemberRepository clubMemberRepo, UserRepository userRepo) {
     super(loader, mapper, Club.class, "data/dev/clubs.jsonc");
-    this.clubRepo = repo;
+    this.clubRepo = clubRepo;
+    this.clubMemberRepo = clubMemberRepo;
     this.userRepo = userRepo;
   }
 
   @Override
   protected void configureMapper(ObjectMapper mapper) {
     SimpleModule module = new SimpleModule();
-    // String -> User 변환
-    module.addDeserializer(User.class, new EntityReferenceDeserializer<>(president -> userRepo.findByNumber(president).orElseThrow(() -> new RuntimeException("User[" + president + "] not found"))));
-    // (추가로 필요한 부분이 있을 경우, 'addDeserializer' 사용
+    module.addDeserializer(User.class, new EntityReferenceDeserializer<>(
+        president -> userRepo.findByNumber(president)
+            .orElseThrow(() -> new RuntimeException("User[" + president + "] not found"))
+    ));
     mapper.registerModule(module);
   }
 
   @Override
   public void load() {
-    // 모든 항목을 출력하는 대신, 저장한 동아리의 수를 한 줄로 출력하기
-    // 모든 JSONC 파일 맨 위에 항목의 총 갯수를 적어둘 것
     LongAdder adder = new LongAdder();
     processItems(club -> {
       if (!clubRepo.existsBySlug(club.getSlug())) {
         clubRepo.save(club);
+
+        // APPROVED 동아리는 회장을 ClubMember(ROLE_PRESIDENT, APPROVED)로 자동 등록
+        // — ClubService.updateClubStatus() 승인 로직과 동일한 패턴
+        if (club.getStatus() == ClubStatus.APPROVED && club.getPresident() != null) {
+          if (!clubMemberRepo.existsByUserAndClub(club.getPresident(), club)) {
+            ClubMember president = new ClubMember();
+            president.setClub(club);
+            president.setUser(club.getPresident());
+            president.setRole(ClubRole.ROLE_PRESIDENT);
+            president.setStatus(ClubMemberStatus.APPROVED);
+            president.setJoinedAt(LocalDateTime.now());
+            clubMemberRepo.save(president);
+          }
+        }
+
         adder.increment();
       }
     });

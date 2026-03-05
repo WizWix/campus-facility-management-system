@@ -37,9 +37,14 @@ public class ClubService implements IClubService {
   private final UserRepository userRepository;
 
   /// 동아리 개설 신청 — PENDING 상태로 생성, 관리자 승인 필요
+  /// slug 중복 시 IllegalArgumentException — joinClub 중복 가입 차단과 동일한 패턴
   @Override
   public ResponseClubDetail createClub(String userNumber, RequestClubCreate req) {
-    User user = userRepository.findByNumber(userNumber).orElseThrow(() -> new NotFoundException("회원을 찾을 수 없습니다."));
+    if (clubRepository.findBySlug(req.slug()).isPresent()) {
+      throw new IllegalArgumentException("이미 사용 중인 동아리 식별자(slug)입니다.");
+    }
+    User user = userRepository.findByNumber(userNumber)
+        .orElseThrow(() -> new NotFoundException("회원을 찾을 수 없습니다."));
     Club club = new Club();
     club.setName(req.name());
     club.setSlug(req.slug());
@@ -49,24 +54,33 @@ public class ClubService implements IClubService {
     club.setPresident(user);
     club.setCreatedAt(LocalDateTime.now());
     clubRepository.save(club);
-    return new ResponseClubDetail(club.getId(), club.getName(), club.getSlug(), club.getDescription(), user.getName(), club.getAutoApprove(), getMemberCount(club), club.getCreatedAt(), club.getStatus());
+    return new ResponseClubDetail(
+        club.getId(), club.getName(), club.getSlug(), club.getDescription(),
+        user.getName(), club.getAutoApprove(), getMemberCount(club),
+        club.getCreatedAt(), club.getStatus()
+    );
   }
 
   /// 동아리 상세 조회 — slug로 검색
   @Override
   public ResponseClubDetail getClubDetail(String slug) {
-    Club club = clubRepository.findBySlug(slug).orElseThrow(() -> new NotFoundException("동아리를 찾을 수 없습니다."));
-    return new ResponseClubDetail(club.getId(), club.getName(), club.getSlug(), club.getDescription(), getPresidentName(club), club.getAutoApprove(), getMemberCount(club), club.getCreatedAt(), club.getStatus());
+    Club club = clubRepository.findBySlug(slug)
+        .orElseThrow(() -> new NotFoundException("동아리를 찾을 수 없습니다."));
+    return new ResponseClubDetail(
+        club.getId(), club.getName(), club.getSlug(), club.getDescription(),
+        getPresidentName(club), club.getAutoApprove(), getMemberCount(club),
+        club.getCreatedAt(), club.getStatus()
+    );
   }
 
   /// 상태별 동아리 목록 조회 — 관리자 페이지에서 사용
   @Override
   public List<ResponseClubList> getClubListByStatus(ClubStatus status) {
     var list = new ArrayList<ResponseClubList>();
-    clubRepository.findByStatus(status).forEach(c -> {
-      var resp = new ResponseClubList(c.getId(), c.getName(), c.getSlug(), getPresidentName(c), c.getStatus(), getMemberCount(c), c.getCreatedAt());
-      list.add(resp);
-    });
+    clubRepository.findByStatus(status).forEach(c -> list.add(new ResponseClubList(
+        c.getId(), c.getName(), c.getSlug(), getPresidentName(c),
+        c.getStatus(), getMemberCount(c), c.getCreatedAt()
+    )));
     return list;
   }
 
@@ -76,38 +90,46 @@ public class ClubService implements IClubService {
     List<Club> clubs = (query == null || query.isBlank())
         ? clubRepository.findByStatus(ClubStatus.APPROVED)
         : clubRepository.searchByKeyword(query);
-    List<ResponseClubList> list = new ArrayList<>();
-    clubs.forEach(c -> {
-      var resp = new ResponseClubList(c.getId(), c.getName(), c.getSlug(), getPresidentName(c), c.getStatus(), getMemberCount(c), c.getCreatedAt());
-      list.add(resp);
-    });
+    var list = new ArrayList<ResponseClubList>();
+    clubs.forEach(c -> list.add(new ResponseClubList(
+        c.getId(), c.getName(), c.getSlug(), getPresidentName(c),
+        c.getStatus(), getMemberCount(c), c.getCreatedAt()
+    )));
     return list;
   }
 
   /// 동아리 정보 수정 — 회장만 가능
   @Override
   public ResponseClubDetail updateClub(String userNumber, String slug, RequestClubUpdate req) {
-    Club club = clubRepository.findBySlug(slug).orElseThrow(() -> new NotFoundException("동아리를 찾을 수 없습니다."));
-    User user = userRepository.findByNumber(userNumber).orElseThrow(() -> new NotFoundException("학생을 찾을 수 없습니다."));
+    Club club = clubRepository.findBySlug(slug)
+        .orElseThrow(() -> new NotFoundException("동아리를 찾을 수 없습니다."));
+    User user = userRepository.findByNumber(userNumber)
+        .orElseThrow(() -> new NotFoundException("학생을 찾을 수 없습니다."));
     if (club.getPresident() == null || !club.getPresident().getId().equals(user.getId())) {
       throw new IllegalArgumentException("회장만 동아리 정보를 수정할 수 있습니다.");
     }
-
     club.setName(req.name());
     club.setDescription(req.description());
     club.setAutoApprove(req.autoApprove());
-
     clubRepository.save(club);
-    return new ResponseClubDetail(club.getId(), club.getName(), club.getSlug(), club.getDescription(), getPresidentName(club), club.getAutoApprove(), getMemberCount(club), club.getCreatedAt(), club.getStatus());
+    return new ResponseClubDetail(
+        club.getId(), club.getName(), club.getSlug(), club.getDescription(),
+        getPresidentName(club), club.getAutoApprove(), getMemberCount(club),
+        club.getCreatedAt(), club.getStatus()
+    );
   }
 
   /// 동아리 상태 변경 — 관리자 전용 (승인/거절)
+  /// 승인 시 회장을 ClubMember(ROLE_PRESIDENT, APPROVED)로 자동 등록
   @Override
   public ResponseClubDetail updateClubStatus(String slug, ClubStatus status, String reason, String adminNumber) {
-    Club club = clubRepository.findBySlug(slug).orElseThrow(() -> new NotFoundException("동아리를 찾을 수 없습니다."));
-    User admin = userRepository.findByNumber(adminNumber).orElseThrow(() -> new NotFoundException("회원을 찾을 수 없습니다."));
-    if (!admin.getRole().equals(UserRole.ROLE_ADMIN)) throw new IllegalArgumentException("유효하지 않은 요청입니다.");
-
+    Club club = clubRepository.findBySlug(slug)
+        .orElseThrow(() -> new NotFoundException("동아리를 찾을 수 없습니다."));
+    User admin = userRepository.findByNumber(adminNumber)
+        .orElseThrow(() -> new NotFoundException("회원을 찾을 수 없습니다."));
+    if (!admin.getRole().equals(UserRole.ROLE_ADMIN)) {
+      throw new IllegalArgumentException("유효하지 않은 요청입니다.");
+    }
     club.setStatus(status);
     club.setRejectReason(reason);
     clubRepository.save(club);
@@ -124,8 +146,11 @@ public class ClubService implements IClubService {
         clubMemberRepository.save(president);
       }
     }
-
-    return new ResponseClubDetail(club.getId(), club.getName(), club.getSlug(), club.getDescription(), getPresidentName(club), club.getAutoApprove(), getMemberCount(club), club.getCreatedAt(), club.getStatus());
+    return new ResponseClubDetail(
+        club.getId(), club.getName(), club.getSlug(), club.getDescription(),
+        getPresidentName(club), club.getAutoApprove(), getMemberCount(club),
+        club.getCreatedAt(), club.getStatus()
+    );
   }
 
   /// 동아리 부원 수 조회

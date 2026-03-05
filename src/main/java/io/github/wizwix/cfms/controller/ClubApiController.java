@@ -7,7 +7,6 @@ import io.github.wizwix.cfms.dto.response.club.ResponseClubDetail;
 import io.github.wizwix.cfms.dto.response.club.ResponseClubList;
 import io.github.wizwix.cfms.dto.response.club.ResponseClubMember;
 import io.github.wizwix.cfms.dto.response.club.ResponseMyClub;
-import io.github.wizwix.cfms.model.enums.ClubMemberStatus;
 import io.github.wizwix.cfms.service.iface.IClubMemberService;
 import io.github.wizwix.cfms.service.iface.IClubService;
 import jakarta.validation.Valid;
@@ -34,18 +33,17 @@ public class ClubApiController {
   private final IClubMemberService clubMemberService;
   private final IClubService clubService;
 
-  // TODO: 동아리 신청 전, 동일한 slug의 동아리가 있는지 확인하는 과정이 필요한가?
-
-  /// 내가 가입한 동아리 목록 — 마이페이지용
-  @GetMapping("/my")
-  public ResponseEntity<List<ResponseMyClub>> myClubs(Authentication auth) {
-    return ResponseEntity.ok(clubMemberService.getMyClubs(auth.getName()));
-  }
-
   /// 동아리 개설 신청
   @PostMapping
   public ResponseEntity<ResponseClubDetail> create(@RequestBody @Valid RequestClubCreate req, Authentication auth) {
     return ResponseEntity.status(HttpStatus.CREATED).body(clubService.createClub(auth.getName(), req));
+  }
+
+  /// 내 동아리 목록 — 가입 신청 대기(PENDING) + 승인된(APPROVED) 동아리, 로그인 필요
+  /// /me 가 /{slug} 보다 먼저 선언되어야 "me"를 slug로 오인하지 않음
+  @GetMapping("/me")
+  public ResponseEntity<List<ResponseMyClub>> myClubs(Authentication auth) {
+    return ResponseEntity.ok(clubMemberService.getMyClubs(auth.getName()));
   }
 
   /// 동아리 상세 정보
@@ -62,17 +60,17 @@ public class ClubApiController {
     return ResponseEntity.status(HttpStatus.CREATED).body(clubMemberService.joinClub(auth.getName(), slug));
   }
 
-  /// 부원 탈퇴/추방 — userId는 DB primary key
+  /// 부원 탈퇴/추방
   @DeleteMapping("/{slug}/members/{userId}")
   public ResponseEntity<Void> kick(@PathVariable String slug, @PathVariable Long userId, Authentication auth) {
     clubMemberService.kickMember(auth.getName(), slug, userId);
     return ResponseEntity.noContent().build();
   }
 
-  /// 동아리 부원 목록 — status 파라미터로 PENDING 등 필터 가능 (기본: APPROVED)
+  /// 동아리 부원 목록
   @GetMapping("/{slug}/members")
-  public ResponseEntity<List<ResponseClubMember>> memberList(@PathVariable String slug, @RequestParam(required = false) ClubMemberStatus status) {
-    return ResponseEntity.ok(clubMemberService.getMembers(slug, status));
+  public ResponseEntity<List<ResponseClubMember>> memberList(@PathVariable String slug) {
+    return ResponseEntity.ok(clubMemberService.getMembers(slug, null));
   }
 
   /// 동아리 목록 검색
@@ -81,7 +79,7 @@ public class ClubApiController {
     return ResponseEntity.ok(clubService.searchClubs(q, page));
   }
 
-  /// 부원 역할 변경 — userId는 DB primary key
+  /// 부원 역할 변경
   @PatchMapping("/{slug}/members/{userId}/role")
   public ResponseEntity<ResponseClubMember> setRole(@PathVariable String slug, @PathVariable Long userId, @RequestBody RequestClubMemberRole req, Authentication auth) {
     return ResponseEntity.ok(clubMemberService.setRole(auth.getName(), slug, userId, req.clubRole()));

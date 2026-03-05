@@ -30,27 +30,64 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    AuthenticationEntryPoint entryPoint = (request, response, ex) -> errorWriter.write(response, HttpStatus.UNAUTHORIZED, "Authentication required");
-    AccessDeniedHandler deniedHandler = (request, response, ex) -> errorWriter.write(response, HttpStatus.FORBIDDEN, "Access denied");
+    AuthenticationEntryPoint entryPoint = (request, response, ex) ->
+        errorWriter.write(response, HttpStatus.UNAUTHORIZED, "Authentication required");
+    AccessDeniedHandler deniedHandler = (request, response, ex) ->
+        errorWriter.write(response, HttpStatus.FORBIDDEN, "Access denied");
 
-    http.csrf(AbstractHttpConfigurer::disable).cors(Customizer.withDefaults()).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(auth -> auth
-        // ── 공개 API (비로그인 접근 가능) ──
-        .requestMatchers("/api/auth/login", "/api/auth/logout", "/api/auth/register", "/api/auth/password-reset/**").permitAll()
-        // GET 요청 중 공개 조회:
-        //   /api/reservations (쿼리 파라미터용, e.g. ?roomId=1&date=...) — 타임라인 UI
-        //   ※ /api/reservations/** 가 아닌 정확히 /api/reservations만 permitAll
-        //   ※ /api/reservations/me, /api/reservations/{id} 는 아래 authenticated에 매치됨
-        //   매처 순서 중요: 이 줄이 아래 "/api/reservations/**".authenticated() 보다 먼저 선언되어야 함
-        .requestMatchers(HttpMethod.GET, "/api/library/reading-rooms/reservations/me", "/api/library/study-rooms/reservations/me").authenticated()
-        .requestMatchers(HttpMethod.GET, "/api/clubs/my").authenticated()
-        .requestMatchers(HttpMethod.GET, "/api/dorms/applications/me").authenticated()
-        .requestMatchers(HttpMethod.GET, "/api/buildings/**", "/api/rooms/**", "/api/cafeterias/**", "/api/dorms/**", "/api/clubs/**", "/api/counseling/counselors", "/api/counseling/slots", "/api/reservations", "/api/library/**").permitAll()
-        // ── 관리자 전용 ──
-        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-        // ── 로그인 필요 API ──
-        .requestMatchers("/api/users/**", "/api/reservations/**").authenticated().requestMatchers(HttpMethod.POST, "/api/clubs/**").authenticated().requestMatchers(HttpMethod.PATCH, "/api/clubs/**").authenticated().requestMatchers(HttpMethod.DELETE, "/api/clubs/**").authenticated().requestMatchers("/api/**").authenticated()
-        // ── 프론트엔드 (React SPA) 및 정적 리소스 ──
-        .anyRequest().permitAll()).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class).addFilterBefore(rateLimitFilter, JwtAuthenticationProcessingFilter.class).exceptionHandling(conf -> conf.authenticationEntryPoint(entryPoint).accessDeniedHandler(deniedHandler));
+    http
+        .csrf(AbstractHttpConfigurer::disable)
+        .cors(Customizer.withDefaults())
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+
+            // ── 인증 ──
+            .requestMatchers(
+                "/api/auth/login", "/api/auth/logout",
+                "/api/auth/register", "/api/auth/password-reset/**"
+            ).permitAll()
+
+            // ── 관리자 전용 ──
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+            // ── 로그인 필요 GET — permitAll() 보다 반드시 먼저 선언 ──
+            // /api/clubs/me : 내 동아리 목록 (기존 /api/clubs/my 오타 수정)
+            .requestMatchers(HttpMethod.GET,
+                "/api/clubs/me",
+                "/api/reservations/me",
+                "/api/dorms/my",
+                "/api/counseling/reservations/me",
+                "/api/buildings/*/library/reading-rooms/reservations/me",
+                "/api/buildings/*/library/study-rooms/reservations/me"
+            ).authenticated()
+
+            // ── 공개 GET ──
+            // ※ 위의 .authenticated() 매처보다 뒤에 선언되어야 /me 경로가 덮이지 않음
+            .requestMatchers(HttpMethod.GET,
+                "/api/buildings/**", "/api/rooms/**", "/api/cafeterias/**",
+                "/api/dorms/**", "/api/clubs/**", "/api/reservations",
+                "/api/counseling/counselors", "/api/counseling/slots",
+                "/api/library/**"
+            ).permitAll()
+
+            // ── 로그인 필요 (POST / PATCH / DELETE) ──
+            .requestMatchers(HttpMethod.POST, "/api/clubs/**").authenticated()
+            .requestMatchers(HttpMethod.PATCH, "/api/clubs/**").authenticated()
+            .requestMatchers(HttpMethod.DELETE, "/api/clubs/**").authenticated()
+
+            // ── 나머지 인증 필요 API ──
+            .requestMatchers("/api/users/**", "/api/reservations/**").authenticated()
+            .requestMatchers("/api/**").authenticated()
+
+            // ── 프론트엔드 (React SPA) 및 정적 리소스 ──
+            .anyRequest().permitAll()
+        )
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(rateLimitFilter, JwtAuthenticationProcessingFilter.class)
+        .exceptionHandling(conf -> conf
+            .authenticationEntryPoint(entryPoint)
+            .accessDeniedHandler(deniedHandler)
+        );
     return http.build();
   }
 
