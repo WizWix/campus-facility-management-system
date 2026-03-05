@@ -172,11 +172,12 @@ function ClubTab() {
   const [apps, setApps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('PENDING');
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (status) => {
     setLoading(true);
     try {
-      setApps(await fetchAdminClubs());
+      setApps(await fetchAdminClubs(status));
     } catch (err) {
       console.error(err);
     } finally {
@@ -185,11 +186,8 @@ function ClubTab() {
   }, []);
 
   useEffect(() => {
-    // noinspection JSIgnoredPromiseFromCall
-    load();
-  }, [load]);
-
-  if (loading) return <div className="mypage-loading">데이터를 불러오는 중...</div>;
+    load(statusFilter);
+  }, [load, statusFilter]);
 
   return (
       <div>
@@ -197,6 +195,10 @@ function ClubTab() {
           <h3>동아리 신청 관리</h3>
           <p className="mypage-section-sub">신규 동아리 개설 신청을 심사합니다</p>
         </div>
+        <StatusFilter value={statusFilter} onChange={setStatusFilter}/>
+        {loading ? (
+            <div className="mypage-loading">데이터를 불러오는 중...</div>
+        ) : (
         <table className="table mypage-table">
           <thead>
           <tr>
@@ -204,16 +206,22 @@ function ClubTab() {
             <th>회장</th>
             <th>식별자(Slug)</th>
             <th>신청일</th>
+            <th>상태</th>
             <th>관리</th>
           </tr>
           </thead>
           <tbody>
-          {apps.map(a => (
+          {apps.length === 0 ? (
+              <tr>
+                <td colSpan={6} style={{textAlign: 'center', color: '#A0AEC0'}}>데이터가 없습니다.</td>
+              </tr>
+          ) : apps.map(a => (
               <tr key={a.id}>
                 <td>{a.name}</td>
-                <td>{a.presidentName || a.president}</td>
+                <td>{a.presidentName}</td>
                 <td><code>{a.slug}</code></td>
                 <td>{a.createdAt?.split('T')[0]}</td>
+                <td><span className={`mypage-badge ${STATUS_CLASSES[a.status]}`}>{STATUS_MAP[a.status]}</span></td>
                 <td>
                   <button className="btn btn-sm btn-outline-primary" onClick={() => setSelected(a)}>처리</button>
                 </td>
@@ -221,7 +229,8 @@ function ClubTab() {
           ))}
           </tbody>
         </table>
-        {selected && <ClubStatusModal club={selected} onClose={() => setSelected(null)} onRefresh={load}/>}
+        )}
+        {selected && <ClubStatusModal club={selected} onClose={() => setSelected(null)} onRefresh={() => load(statusFilter)}/>}
       </div>
   );
 }
