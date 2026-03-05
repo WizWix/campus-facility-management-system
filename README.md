@@ -197,7 +197,7 @@ java \
 | `GET` | `/api/reservations?roomId=&date=` | 공개 | 호실별 예약 현황 조회 |
 | `POST` | `/api/reservations` | 인증 | 시설 예약 신청 |
 | `GET` | `/api/reservations/me` | 인증 | 내 예약 내역 조회 |
-| `DELETE` | `/api/reservations/{id}` | 인증 | 예약 취소 (PENDING만 가능) |
+| `DELETE` | `/api/reservations/{id}` | 인증 | 예약 취소 (승인 대기 중인 예약만 가능) |
 
 </details>
 
