@@ -275,12 +275,21 @@ java \
 
 ### 식당 (`/api/cafeterias`)
 
+<details>
+<summary>접기/펼치기</summary>
+
 | 메서드 | 경로 | 권한 | 설명 |
 |---|---|---|---|
 | `GET` | `/api/cafeterias/meals` | 공개 | 날짜별 학식 조회 |
 | `GET` | `/api/cafeterias/foodcourt` | 공개 | 푸드코트 매장·메뉴 목록 |
 
+</details>
+
 ### 관리자 (`/api/admin`) — `ROLE_ADMIN` 전용
+
+
+<details>
+<summary>접기/펼치기</summary>
 
 | 메서드 | 경로 | 설명 |
 |---|---|---|
@@ -293,7 +302,12 @@ java \
 | `GET` | `/api/admin/counseling?status=` | 상담 예약 신청 목록 |
 | `PATCH` | `/api/admin/counseling/{id}/status` | 상담 예약 승인/거절 |
 
+</details>
+
 ## 역할 및 권한
+
+<details>
+<summary>접기/펼치기</summary>
 
 | 역할 | 설명 |
 |---|---|
@@ -301,10 +315,12 @@ java \
 | `ROLE_PROFESSOR` | 학생과 동일 + 반복 예약 가능 |
 | `ROLE_ADMIN` | 모든 신청 내역 승인/거절, 관리자 전용 API 접근 |
 
+</details>
+
 ## 프로젝트 구조
 
 ```
-cfms/
+campus-facility-management-system/
 ├── frontend/                   # React 프론트엔드 (Vite + Bun)
 │   ├── src/
 │   │   ├── components/         # 공통 컴포넌트 (AuthModal 등)
