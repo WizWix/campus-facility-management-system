@@ -16,4 +16,7 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, Long> {
   List<ClubMember> findByClubSlugAndStatus(String slug, ClubMemberStatus status);
 
   Optional<ClubMember> findByUser(User user);
+
+  /// 특정 동아리 + 특정 사용자로 부원 조회 (추방/역할 변경 시 사용)
+  Optional<ClubMember> findByUserAndClubSlug(User user, String slug);
 }
