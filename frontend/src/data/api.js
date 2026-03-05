@@ -177,8 +177,8 @@ export async function fetchAdminClubs(status = 'PENDING') {
 }
 
 /// 동아리 개설 승인/거절 — ROLE_ADMIN 필요
-export async function updateAdminClubStatus(id, data) {
-  const res = await fetch(`${BASE}/admin/clubs/${id}/status`, {
+export async function updateAdminClubStatus(slug, data) {
+  const res = await fetch(`${BASE}/admin/clubs/${slug}/status`, {
     method: 'PATCH',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify(data),
@@ -340,9 +340,7 @@ export async function fetchStudyRooms() {
 
 /// 스터디룸 예약 현황 (시간 슬롯) 조회
 export async function fetchStudyRoomSlots(roomId, date) {
-  const res = await fetch(
-      `${BASE}/library/study-rooms/${roomId}/slots?date=${date}`,
-  );
+  const res = await fetch(`${BASE}/library/study-rooms/${roomId}/slots?date=${date}`);
   if (!res.ok) throw new Error('예약 현황을 불러오지 못했습니다.');
   return res.json();
 }
@@ -395,6 +393,8 @@ export async function fetchMyStudyRoomReservations() {
   return res.json();
 }
 
+// ── 관리자 상담 관련 ──
+
 /// 상담 예약 목록 조회 — ROLE_ADMIN 필요
 export async function fetchAdminCounseling(status = 'PENDING') {
   const res = await fetch(`${BASE}/admin/counseling?status=${status}`);
@@ -432,9 +432,10 @@ export async function cancelStudyRoomReservation(reservationId) {
 
 // ── 동아리 관련 ──
 
-/// 내가 가입한 동아리 목록 — 마이페이지 동아리 탭
+/// 내가 가입한 동아리 목록 — 마이페이지 동아리 탭, 로그인 필요
+/// GET /api/clubs/me → ClubMemberService.getMyClubs()
 export async function fetchMyClubs() {
-  const res = await fetch(`${BASE}/clubs/my`);
+  const res = await fetch(`${BASE}/clubs/me`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
