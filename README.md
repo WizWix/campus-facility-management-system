@@ -79,7 +79,7 @@ CFMS는 캠퍼스의 모든 시설을 하나의 서비스에서 관리하는 것
 | `MYSQL_PASSWORD` | `mysql` | MySQL 비밀번호 |
 | `JWT_SECRET` | *(내장 기본값)* | JWT 서명 시크릿 키 (프로덕션에서는 반드시 변경) |
 
-> `createDatabaseIfNotExist=true` 옵션이 기본 URL에 포함되어 있어 DB가 없으면 자동 생성됩니다.
+> `createDatabaseIfNotExist=true` 옵션이 기본 URL에 포함되어 있어 DB가 없으면 자동 생성됩니다.<br>
 > 테이블은 `spring.jpa.hibernate.ddl-auto: update` 설정으로 자동 생성·갱신됩니다.
 
 ### 실행 방법
